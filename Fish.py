@@ -55,6 +55,32 @@ class Fish:
         for fish, data in cls.FISH_DATA.items():
             print(f"Fish Type: {fish}, Details: {data}")
 
+    @classmethod
+    def calculate_resource_needs(cls, fish_type, quantity):
+        """
+        Calculate total resources needed based on the quantity of fish.
 
+        :param fish_type: Type of fish (e.g., 'Clef Fins')
+        :param quantity: Number of fish being managed or sold.
+        :return: Dictionary with required amounts for fertiliser, feed, and salt.
+        """
+        if fish_type in cls.FISH_DATA:
+            requirements = cls.FISH_DATA[fish_type]
+            return {
+                "fertiliser": requirements["fertiliser"] * quantity,
+                "feed": requirements["feed"] * quantity,
+                "salt": requirements["salt"] * quantity
+            }
+        return {}
+
+    @classmethod
+    def get_maintenance_time(cls, fish_type):
+        """
+        Retrieve the maintenance time required for this fish type.
+
+        :param fish_type: Type of fish (e.g., 'Clef Fins')
+        :return: Maintenance time for the given fish type.
+        """
+        return cls.FISH_DATA.get(fish_type, {}).get("maintenance_time", 0)
 
 
