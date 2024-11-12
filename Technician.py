@@ -17,10 +17,8 @@ class Technician:
         """Return the maximum number of technicians allowed per quarter."""
         return cls.MAX_TECHNICIANS
 
+    def get_quarterly_labour(self):
+        """Return the total number of weeks the technician is available per quarter (9 weeks)."""
+        return Technician.LABOUR_PER_QUARTER
 
-# Creating an instance of Technician
-technician_1 = Technician("John Doe")
 
-# Calling the get_wage method on the instance
-quarterly_wage = technician_1.get_wage()
-print(f"{technician_1.name}'s quarterly wage is: £{quarterly_wage}")

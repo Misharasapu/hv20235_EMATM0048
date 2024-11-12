@@ -1,5 +1,5 @@
 class Warehouse:
-    # Static data for warehouse capacities, depreciation rates, and costs
+    # Static data for main and auxiliary warehouse capacities, depreciation rates, and costs
     CAPACITIES = {
         "fertiliser": {"main": 20, "aux": 10},  # litres
         "feed": {"main": 400, "aux": 200},      # kg
@@ -18,112 +18,114 @@ class Warehouse:
         "salt": 0.001        # cost per gram
     }
 
-    @classmethod
-    def get_total_capacity(cls):
-        """Calculate total capacity (main + aux) for each resource."""
-        return {
-            "fertiliser": cls.CAPACITIES["fertiliser"]["main"] + cls.CAPACITIES["fertiliser"]["aux"],
-            "feed": cls.CAPACITIES["feed"]["main"] + cls.CAPACITIES["feed"]["aux"],
-            "salt": cls.CAPACITIES["salt"]["main"] + cls.CAPACITIES["salt"]["aux"]
+    def __init__(self):
+        # Initialize main and auxiliary stock to full capacity
+        self.main_stock = {
+            "fertiliser": Warehouse.CAPACITIES["fertiliser"]["main"],
+            "feed": Warehouse.CAPACITIES["feed"]["main"],
+            "salt": Warehouse.CAPACITIES["salt"]["main"]
+        }
+        self.aux_stock = {
+            "fertiliser": Warehouse.CAPACITIES["fertiliser"]["aux"],
+            "feed": Warehouse.CAPACITIES["feed"]["aux"],
+            "salt": Warehouse.CAPACITIES["salt"]["aux"]
         }
 
-    @classmethod
-    def display_warehouse_info(cls):
-        """Display information about capacities, depreciation rates, and costs."""
-        capacities = cls.get_total_capacity()
-        return (f"Capacities - Fertiliser: {capacities['fertiliser']} litres, "
-                f"Feed: {capacities['feed']} kg, Salt: {capacities['salt']} kg\n"
-                f"Depreciation Rates - Fertiliser: {cls.DEPRECIATION_RATES['fertiliser']} per quarter, "
-                f"Feed: {cls.DEPRECIATION_RATES['feed']} per quarter, "
-                f"Salt: {cls.DEPRECIATION_RATES['salt']} per quarter\n"
-                f"Warehouse Costs - Fertiliser: £{cls.COSTS['fertiliser']} per litre, "
-                f"Feed: £{cls.COSTS['feed']} per gram, Salt: £{cls.COSTS['salt']} per gram")
-
-    def __init__(self):
-        # Initialize stock to full capacity using get_total_capacity
-        self.current_stock = Warehouse.get_total_capacity()
-        self.storage_costs = 0  # Optional, to track quarterly storage costs
 
     def calculate_depreciation(self):
-        """Apply depreciation to each resource in stock based on its rate."""
-        for resource, amount in self.current_stock.items():
-            # Retrieve the depreciation rate for the resource (0 if not defined)
+        """Apply depreciation to each resource in both main and auxiliary stocks."""
+        for resource in self.main_stock:
+            # Calculate depreciation for main warehouse stock
             depreciation_rate = Warehouse.DEPRECIATION_RATES.get(resource, 0)
+            depreciated_amount_main = self.main_stock[resource] * (1 - depreciation_rate)
+            self.main_stock[resource] = max(0, round(depreciated_amount_main))
 
-            # Apply depreciation by reducing the stock amount
-            # For example, if 100 kg of feed is in stock and depreciation is 10%, it will become 90 kg
-            depreciated_amount = amount * (1 - depreciation_rate)
+            # Calculate depreciation for auxiliary warehouse stock
+            depreciated_amount_aux = self.aux_stock[resource] * (1 - depreciation_rate)
+            self.aux_stock[resource] = max(0, round(depreciated_amount_aux))
 
-            # Round up to the nearest integer, as specified in the brief
-            self.current_stock[resource] = max(0, round(depreciated_amount))
-
-        return self.current_stock
+        return self.main_stock, self.aux_stock
 
     def get_storage_costs(self):
-        """Calculate and return the total storage cost based on the current stock."""
-        total_cost = 0  # Initialize the total cost to zero
+        """Calculate and return the storage costs for both main and auxiliary warehouses."""
+        main_cost = 0
+        aux_cost = 0
 
-        # Loop through each resource type in the current stock
-        for resource, amount in self.current_stock.items():
-            # Retrieve the cost per unit of storage for the resource (e.g., £0.10 per litre of fertiliser)
+        # Calculate costs for the main warehouse
+        for resource, amount in self.main_stock.items():
             unit_cost = Warehouse.COSTS.get(resource, 0)
+            main_cost += unit_cost * amount
 
-            # Calculate the cost for the current stock of this resource and add to total cost
-            # For example, if we have 10 litres of fertiliser and the cost is £0.10 per litre, the cost is 10 * 0.10 = £1.00
-            total_cost += unit_cost * amount
+        # Calculate costs for the auxiliary warehouse
+        for resource, amount in self.aux_stock.items():
+            unit_cost = Warehouse.COSTS.get(resource, 0)
+            aux_cost += unit_cost * amount
 
-        # Update the storage costs attribute with the calculated total
-        self.storage_costs = total_cost
+        # Store the costs in attributes
+        self.storage_costs_main = main_cost
+        self.storage_costs_aux = aux_cost
 
-        return total_cost  # Return the total cost for use elsewhere in the program
+        return main_cost, aux_cost
 
     def check_stock(self, resource, required_amount):
         """
-        Check if there's sufficient stock of a given resource.
+        Check if there's sufficient stock of a given resource across both warehouses.
         :param resource: Type of resource to check (e.g., 'fertiliser').
         :param required_amount: Amount needed for the operation.
         :return: True if enough stock is available, False otherwise.
         """
-        # Check if the resource exists in current stock and if the stock is sufficient
-        return self.current_stock.get(resource, 0) >= required_amount
+        total_stock = self.main_stock.get(resource, 0) + self.aux_stock.get(resource, 0)
+        return total_stock >= required_amount
 
     def deduct_stock(self, resource, amount):
         """
-        Deduct a specific amount of a resource from stock.
+        Deduct a specific amount of a resource from stock, prioritizing the main warehouse.
         :param resource: Type of resource (e.g., 'fertiliser').
         :param amount: Quantity to deduct.
-        :return: Updated stock amount for the resource.
+        :return: Remaining amount after deduction for verification.
         """
-        # Ensure that the resource exists in current stock
-        if resource in self.current_stock:
-            # Deduct the specified amount and ensure stock doesn't go negative
-            self.current_stock[resource] = max(0, self.current_stock[resource] - amount)
+        if resource in self.main_stock:
+            # Deduct from main stock first
+            main_available = self.main_stock[resource]
+            if main_available >= amount:
+                self.main_stock[resource] -= amount
+                amount = 0
+            else:
+                # Deduct whatever is left from auxiliary if main doesn't have enough
+                self.main_stock[resource] = 0
+                amount -= main_available
+                self.aux_stock[resource] = max(0, self.aux_stock[resource] - amount)
 
-        return self.current_stock[resource]  # Return the updated amount for verification
+        return self.main_stock[resource] + self.aux_stock[resource]  # Total remaining for verification
 
     def restock(self, supplier_name, resource, amount):
         """
-        Restocks a specified resource using a supplier's price.
+        Restock a specified resource using a supplier's price, prioritizing the main warehouse.
         :param supplier_name: Name of the supplier (e.g., "Slippery Lakes").
         :param resource: Type of resource to restock (e.g., 'fertiliser').
         :param amount: Quantity to add to the stock.
         :return: Total cost of restocking.
         """
-        # Call Supplier.get_price directly using the supplier name and resource type
         price_per_unit = Supplier.get_price(supplier_name, resource)
 
         if price_per_unit is not None:
-            # Calculate the total cost of the restock
             total_cost = price_per_unit * amount
 
-            # Determine the maximum capacity for the resource
-            max_capacity = Warehouse.get_total_capacity()[resource]
+            # Determine maximum capacities for main and auxiliary
+            max_main = Warehouse.CAPACITIES[resource]["main"]
+            max_aux = Warehouse.CAPACITIES[resource]["aux"]
 
-            # Update current stock, ensuring it doesn't exceed maximum capacity
-            self.current_stock[resource] = min(max_capacity, self.current_stock[resource] + amount)
+            # Restock main stock first
+            available_space_main = max_main - self.main_stock[resource]
+            if amount <= available_space_main:
+                self.main_stock[resource] += amount
+            else:
+                # Fill main stock to capacity and put the remainder in aux stock
+                self.main_stock[resource] = max_main
+                remaining_amount = amount - available_space_main
+                self.aux_stock[resource] = min(max_aux, self.aux_stock[resource] + remaining_amount)
 
-            return total_cost  # Return the total restocking cost for use in financial calculations
+            return total_cost
         else:
-            # If there's no valid price, return 0 as the cost
+            # Return 0 if no valid price is available
             return 0
-
