@@ -30,7 +30,16 @@ class Supplier:
         List all available suppliers with indices for selection in the console.
         :return: A formatted string listing suppliers by index.
         """
-        suppliers = [f"{index + 1}. {supplier}" for index, supplier in enumerate(cls.PRICES.keys())]
-        return "\n".join(suppliers)
+        # Initialize an empty list to store each supplier line
+        supplier_list = []
+
+        # Loop through PRICES dictionary using enumerate to get both index and supplier name
+        for index, supplier in enumerate(cls.PRICES.keys(), start=1):
+            # Format each supplier with its index
+            supplier_list.append(f"{index}. {supplier}")
+
+        # Join all supplier lines with a newline character and return the result
+        return "\n".join(supplier_list)
+
 
 
