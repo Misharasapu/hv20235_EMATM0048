@@ -24,3 +24,13 @@ class Supplier:
         """
         return cls.PRICES.get(supplier_name, {}).get(supply_type, None)
 
+    @classmethod
+    def list_suppliers(cls):
+        """
+        List all available suppliers with indices for selection in the console.
+        :return: A formatted string listing suppliers by index.
+        """
+        suppliers = [f"{index + 1}. {supplier}" for index, supplier in enumerate(cls.PRICES.keys())]
+        return "\n".join(suppliers)
+
+
