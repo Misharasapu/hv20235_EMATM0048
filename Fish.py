@@ -67,9 +67,9 @@ class Fish:
         if fish_type in cls.FISH_DATA:
             requirements = cls.FISH_DATA[fish_type]
             return {
-                "fertiliser": requirements["fertiliser"] * quantity,
-                "feed": requirements["feed"] * quantity,
-                "salt": requirements["salt"] * quantity
+                "fertiliser": requirements["fertilizer_req"] * quantity,
+                "feed": requirements["feed_req"] * quantity,
+                "salt": requirements["salt_req"] * quantity
             }
         return {}
 
@@ -82,5 +82,18 @@ class Fish:
         :return: Maintenance time for the given fish type.
         """
         return cls.FISH_DATA.get(fish_type, {}).get("maintenance_time", 0)
+
+    @classmethod
+    def calculate_total_maintenance_time(cls, fish_type, quantity):
+        """
+        Calculate the total maintenance time required based on the quantity of fish.
+
+        :param fish_type: Type of fish (e.g., 'Clef Fins')
+        :param quantity: Number of fish being managed or sold.
+        :return: Total maintenance time required for the given quantity of fish.
+        """
+        maintenance_time_per_fish = cls.get_maintenance_time(fish_type)
+        return maintenance_time_per_fish * quantity
+
 
 
