@@ -58,26 +58,21 @@ class Hatchery:
         Ensures total number of technicians does not exceed the maximum limit.
 
         :param technician_names: List of names for technicians to be added.
-        :return: None
+        :return: List of successfully added technician names.
         """
-
-        # Check if adding the specified number of technicians exceeds the maximum limit
         if len(self.technicians) + len(technician_names) > Technician.MAX_TECHNICIANS:
-            print(f"Cannot add all technicians; exceeds maximum limit of {Technician.MAX_TECHNICIANS}.")
-            return
+            return []  # Exceeds maximum, return an empty list
 
-        # Track hired technicians to return this list if needed
         hired_technicians = []
         for name in technician_names:
             if len(self.technicians) < Technician.MAX_TECHNICIANS:
                 new_technician = Technician(name)
                 self.technicians.append(new_technician)
                 hired_technicians.append(name)
-                print(f"Hired {name}, weekly rate={Technician.WEEKLY_WAGE} in this quarter")
             else:
                 break
 
-        return hired_technicians  # Return list of successfully added technician names
+        return hired_technicians
 
     def remove_technicians(self, num_to_remove):
         """
@@ -88,16 +83,12 @@ class Hatchery:
         """
         removed_technicians = []
 
-        # Check if removing the specified number of technicians is allowed
         if len(self.technicians) - num_to_remove < Technician.MIN_TECHNICIANS:
-            print(f"Cannot remove {num_to_remove} technicians; minimum of {Technician.MIN_TECHNICIANS} required.")
-            return removed_technicians  # Return empty list if removal fails
+            return []  # Cannot remove as it would drop below minimum
 
-        # Remove the specified number of technicians from the end of the list
         for _ in range(num_to_remove):
             if self.technicians:
-                removed_technician = self.technicians.pop()  # Remove the last technician
-                print(f"Let go {removed_technician.name}, weekly rate={Technician.WEEKLY_WAGE} in this quarter")
+                removed_technician = self.technicians.pop()
                 removed_technicians.append(removed_technician.name)
 
         return removed_technicians
@@ -105,100 +96,81 @@ class Hatchery:
     def sell_fish(self):
         """
         Sell fish based on customer demand, available labor, and resources.
-        Updates cash balance with revenue from fish sales, allowing partial sales if resources or labor are insufficient.
+        Returns sales results and revenue without direct output to the console.
 
-        :return: None
+        :return: Dictionary with sale quantities, revenues, and unmet demand details.
         """
         total_revenue = 0
-        available_labor = Technician.calculate_total_labour(len(self.technicians))  # Calculate available labor
+        available_labor = Technician.calculate_total_labour(len(self.technicians))
+        sales_results = []
 
-        # Iterate over each fish type to check demand and resource requirements
         for fish_type, demand_data in self.CUSTOMER_DEMAND.items():
             demand = demand_data["demand"]
             price = demand_data["price"]
-
-            # Calculate resource and labor needs for the demanded quantity
-            resource_needs = Fish.calculate_resource_needs(fish_type, demand)  # Assuming this returns a dictionary
+            resource_needs = Fish.calculate_resource_needs(fish_type, demand)
             maintenance_time = Fish.calculate_total_maintenance_time(fish_type, demand)
-
-            # Initialize sell_quantity as full demand
             sell_quantity = demand
 
-            # Adjust sell_quantity based on available labor
             if available_labor < maintenance_time * demand:
                 max_labor_based_quantity = int(available_labor // maintenance_time)
-                print(f"Insufficient labour: required {maintenance_time * demand}, available {available_labor}")
                 sell_quantity = min(sell_quantity, max_labor_based_quantity)
 
-            # Adjust sell_quantity based on available resources
             for resource, amount_needed_per_unit in resource_needs.items():
                 total_amount_needed = sell_quantity * amount_needed_per_unit
                 available_amount = self.warehouse.main_stock.get(resource, 0) + self.warehouse.aux_stock.get(resource,
                                                                                                              0)
 
-                # If resources are insufficient for full demand, calculate feasible quantity based on resource
                 if available_amount < total_amount_needed:
                     possible_quantity_based_on_resource = int(available_amount // amount_needed_per_unit)
-                    print(
-                        f"Insufficient ingredients for {resource}: need {total_amount_needed}, available {available_amount}")
                     sell_quantity = min(sell_quantity, possible_quantity_based_on_resource)
 
-            # Deduct resources based on the final sell_quantity
             for resource, amount_needed_per_unit in resource_needs.items():
                 self.warehouse.check_and_deduct_resources(resource, sell_quantity * amount_needed_per_unit)
 
-            # Calculate revenue and adjust labor based on the final sell_quantity
             revenue = sell_quantity * price
             total_revenue += revenue
-            available_labor -= sell_quantity * maintenance_time  # Deduct labor used for this sale
+            available_labor -= sell_quantity * maintenance_time
 
-            # Print sales results
-            print(f"Fish {fish_type}, demand {demand}, sell {sell_quantity}: {sell_quantity}")
+            sales_results.append({
+                "fish_type": fish_type,
+                "demand": demand,
+                "sell_quantity": sell_quantity,
+                "revenue": revenue
+            })
 
-        # Update the hatchery's cash balance with total revenue
         self.cash_balance += total_revenue
-        print(f"Total revenue from fish sales: {total_revenue}")
+        return {"total_revenue": total_revenue, "sales_details": sales_results}
 
     def pay_technicians(self):
         """
         Pays each technician based on their quarterly wage and updates the hatchery's cash balance.
-        Logs each payment made.
+        Returns a list of payment details for each technician without console output.
 
-        :return: Total payment amount for all technicians.
+        :return: Total payment amount and a list of individual payment details.
         """
-        total_payment = Technician.calculate_total_wages(
-            self.technicians)  # Use the class method to calculate total wages
-
-        # Iterate through each technician to log individual payments
-        for technician in self.technicians:
-            payment = technician.get_wage()
-            print(f"Paid {technician.name}, weekly rate={Technician.WEEKLY_WAGE} amount {payment}")
+        total_payment = Technician.calculate_total_wages(self.technicians)
+        payments = [{"name": technician.name, "amount": technician.get_wage()} for technician in self.technicians]
 
         # Deduct total payment from cash balance
         self.cash_balance -= total_payment
-        print(f"Total payment for all technicians: {total_payment}")
 
-        return total_payment
+        return {"total_payment": total_payment, "individual_payments": payments}
 
     def calculate_storage_costs(self):
         """
-        Calculate and log storage costs for both main and auxiliary warehouses.
+        Calculate storage costs for both main and auxiliary warehouses.
+        Returns detailed storage costs per resource without printing.
 
-        :return: Total storage cost.
+        :return: Dictionary with total storage costs and detailed costs per resource.
         """
-        # Retrieve detailed storage costs for main and auxiliary warehouses
         main_costs, aux_costs = self.warehouse.get_storage_costs()
-
-        # Log each resource's cost for main and auxiliary warehouses
-        for resource, cost in main_costs.items():
-            print(f"Warehouse Main: {resource.capitalize()} cost {cost:.2f}")
-
-        for resource, cost in aux_costs.items():
-            print(f"Warehouse Auxiliary: {resource.capitalize()} cost {cost:.2f}")
-
-        # Calculate and return total storage cost
         total_storage_cost = sum(main_costs.values()) + sum(aux_costs.values())
-        return total_storage_cost
+
+        return {
+            "total_storage_cost": total_storage_cost,
+            "main_costs": main_costs,
+            "aux_costs": aux_costs
+        }
 
     def restock_resources(self, vendor_name):
         """
@@ -206,22 +178,17 @@ class Hatchery:
         Updates the hatchery's cash balance after restocking.
 
         :param vendor_name: Name of the selected vendor.
-        :return: Total cost of restocking.
+        :return: Dictionary containing restock cost and updated stock levels.
         """
-        # Attempt to restock with the provided vendor
         total_restock_cost = self.warehouse.restock_to_full(vendor_name, self.cash_balance)
+        self.cash_balance -= total_restock_cost
 
-        # Update the balance if restocking cost is within available cash
-        if total_restock_cost <= self.cash_balance:
-            self.cash_balance -= total_restock_cost
-            print(f"Total restocking cost: {total_restock_cost:.2f}")
-        else:
-            # If funds are insufficient for a full restock, print a message and set cash balance to zero if exhausted
-            print(
-                f"Unable to fully restock. Restocking cost was limited by available funds to {total_restock_cost:.2f}")
-            self.cash_balance = 0
-
-        return total_restock_cost
+        return {
+            "total_restock_cost": total_restock_cost,
+            "remaining_cash_balance": self.cash_balance,
+            "main_stock": self.warehouse.main_stock,
+            "aux_stock": self.warehouse.aux_stock
+        }
 
     def end_of_quarter_summary(self, supplier_name):
         """
@@ -230,19 +197,21 @@ class Hatchery:
         and returns a detailed summary of all expenses.
 
         :param supplier_name: Name of the selected supplier for restocking costs.
-        :return: A dictionary containing a detailed breakdown of expenses, total expenses, and remaining cash balance.
+        :return: Dictionary containing a detailed breakdown of expenses, total expenses, and remaining cash balance.
         """
-        # Fixed quarterly cost (class attribute)
-        fixed_costs = self.get_fixed_cost()
+        # Retrieve fixed quarterly cost from class attribute
+        fixed_costs = Hatchery.FIXED_QUARTERLY_COST
 
         # Calculate technician wages for the quarter
         technician_wages = Technician.calculate_total_wages(self.technicians)
 
-        # Calculate storage costs in the warehouse
-        storage_costs = self.calculate_storage_costs()  # This should return the total storage cost
+        # Get storage costs from the warehouse
+        storage_cost_data = self.warehouse.get_storage_costs()
+        storage_costs = sum(storage_cost_data[0].values()) + sum(storage_cost_data[1].values())  # Summing main and aux
 
-        # Calculate restocking costs using the selected supplier (for demonstration, can be adjusted based on requirements)
-        restocking_costs = self.restock_resources(supplier_name)["total_restock_cost"]
+        # Restock resources using the supplier and retrieve the cost
+        restocking_data = self.warehouse.restock_to_full(supplier_name, self.cash_balance)
+        restocking_costs = restocking_data
 
         # Total expenses for the quarter
         total_expenses = fixed_costs + technician_wages + storage_costs + restocking_costs
@@ -259,6 +228,7 @@ class Hatchery:
             "total_expenses": total_expenses,
             "remaining_cash_balance": self.cash_balance
         }
+
 
 
 
