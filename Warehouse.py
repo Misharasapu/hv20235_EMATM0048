@@ -72,17 +72,17 @@ class Warehouse:
             return False
 
     def get_storage_costs(self):
-        """Calculate and return storage costs for both main and auxiliary warehouses."""
-        main_cost = 0
-        aux_cost = 0
+        """Calculate and return detailed storage costs for both main and auxiliary warehouses."""
+        main_cost = {}
+        aux_cost = {}
 
         for resource, amount in self.main_stock.items():
             unit_cost = Warehouse.COSTS.get(resource, 0)
-            main_cost += unit_cost * amount
+            main_cost[resource] = unit_cost * amount
 
         for resource, amount in self.aux_stock.items():
             unit_cost = Warehouse.COSTS.get(resource, 0)
-            aux_cost += unit_cost * amount
+            aux_cost[resource] = unit_cost * amount
 
         return main_cost, aux_cost
 
