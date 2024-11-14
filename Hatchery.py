@@ -209,17 +209,33 @@ class Hatchery:
         Updates the hatchery's cash balance after restocking.
 
         :param vendor_name: Name of the selected vendor.
-        :return: Dictionary containing restock cost and updated stock levels.
+        :return: Dictionary containing restock cost and updated stock levels, or bankruptcy status if funds are insufficient.
         """
-        total_restock_cost = self.warehouse.restock_to_full(vendor_name, self.cash_balance)
-        self.cash_balance -= total_restock_cost
+        # Attempt to restock and receive the result
+        restock_result = self.warehouse.restock_to_full(vendor_name, self.cash_balance)
 
-        return {
-            "total_restock_cost": total_restock_cost,
-            "remaining_cash_balance": self.cash_balance,
-            "main_stock": self.warehouse.main_stock,
-            "aux_stock": self.warehouse.aux_stock
-        }
+        # Check if restocking was successful or led to bankruptcy
+        if restock_result.get("status") == "bankrupt":
+            # Update cash balance to reflect bankruptcy status
+            self.cash_balance = restock_result["available_cash"]
+            return {
+                "status": "bankrupt",
+                "warehouse": restock_result["warehouse"],
+                "resource": restock_result["resource"],
+                "needed": restock_result["needed"],
+                "remaining_cash_balance": self.cash_balance
+            }
+        else:
+            # Deduct total restock cost from cash balance
+            total_restock_cost = restock_result["total_cost"]
+            self.cash_balance -= total_restock_cost
+            return {
+                "status": "success",
+                "total_restock_cost": total_restock_cost,
+                "remaining_cash_balance": self.cash_balance,
+                "main_stock": self.warehouse.main_stock,
+                "aux_stock": self.warehouse.aux_stock
+            }
 
     def end_of_quarter_summary(self, supplier_name):
         """

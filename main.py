@@ -89,7 +89,40 @@ def main():
         for resource, cost in storage_costs["aux_costs"].items():
             print(f"Warehouse Auxiliary: {resource.capitalize()} cost {cost:.2f}")
 
-        # Additional quarter summary and restocking logic will be added after confirming sales
+        # Display vendor list and prompt user for selection
+        print("List of Vendors:")
+        print(Supplier.list_suppliers())
+        vendor_choice = int(input(">>> Enter number of vendor to purchase from: ")) - 1
+
+        # Get the vendor name based on user selection
+        vendors = list(Supplier.PRICES.keys())  # Get the list of vendor names
+        if 0 <= vendor_choice < len(vendors):
+            selected_vendor = vendors[vendor_choice]
+            # Call restock function with selected vendor and available cash
+            restock_result = hatchery.restock_resources(selected_vendor)
+
+            # Handle restocking results
+            if "total_restock_cost" in restock_result:
+                print(
+                    f"Restocked successfully with {selected_vendor}. Remaining cash balance: {restock_result['remaining_cash_balance']:.2f}")
+                print("Updated stock levels:")
+                for resource, amount in restock_result["main_stock"].items():
+                    print(
+                        f"Warehouse Main: {resource.capitalize()}, {amount} (capacity={Warehouse.CAPACITIES[resource]['main']})")
+                for resource, amount in restock_result["aux_stock"].items():
+                    print(
+                        f"Warehouse Auxiliary: {resource.capitalize()}, {amount} (capacity={Warehouse.CAPACITIES[resource]['aux']})")
+            elif restock_result["status"] == "bankrupt":
+                print(
+                    f"Can't restock {restock_result['resource']}, insufficient funds. Need {restock_result['needed']:.2f} but only have {restock_result['available_cash']:.2f}")
+                print(f"Went bankrupt restocking warehouse {restock_result['warehouse']} in quarter {quarter}")
+        else:
+            print("Invalid vendor selection.")
+
+
+
+
+
 
 
 # Run the main function

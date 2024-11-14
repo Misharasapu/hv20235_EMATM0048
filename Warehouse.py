@@ -95,31 +95,36 @@ class Warehouse:
         return main_cost, aux_cost
 
     def restock_to_full(self, supplier_name, available_cash):
-        """
-        Attempt to restock main and auxiliary warehouses to full capacity if enough cash is available.
-
-        :param supplier_name: Name of the supplier (e.g., "Slippery Lakes").
-        :param available_cash: Total cash available for restocking.
-        :return: A dictionary containing the total cost of restocking, updated cash balance,
-                 or bankruptcy details if cash is insufficient for full restocking.
-        """
-        total_cost = 0
-        main_costs, aux_costs = self.get_storage_costs()  # Unpack main and aux costs from get_storage_costs
+        total_cost = 0  # Initialize total cost of restocking
 
         for resource in self.main_stock:
-            # Get storage costs from precomputed data
-            cost_main = main_costs[resource]
-            cost_aux = aux_costs[resource]
+            # Retrieve the supplier-specific price per unit of the resource
+            price_per_unit = Supplier.get_price(supplier_name, resource)
+            print(f"Price per unit for {resource} from {supplier_name}: {price_per_unit}")  # Debug print
 
+            if price_per_unit is None:
+                continue  # Skip if the supplier does not provide a price for this resource
+
+            # Calculate the amounts needed to restock
+            main_restock_amount = Warehouse.CAPACITIES[resource]["main"] - self.main_stock[resource]
+            aux_restock_amount = Warehouse.CAPACITIES[resource]["aux"] - self.aux_stock[resource]
+            print(f"Main restock amount for {resource}: {main_restock_amount}")  # Debug print
+            print(f"Auxiliary restock amount for {resource}: {aux_restock_amount}")  # Debug print
+
+            # Calculate the cost to fully restock main and auxiliary warehouses for this resource
+            cost_main = price_per_unit * main_restock_amount
+            cost_aux = price_per_unit * aux_restock_amount
+            print(f"Cost to restock main for {resource}: {cost_main}")  # Debug print
+            print(f"Cost to restock auxiliary for {resource}: {cost_aux}")  # Debug print
+
+            # Attempt to restock the main warehouse first
             if available_cash >= cost_main:
-                # Full restock for main warehouse if funds allow
-                self.main_stock[resource] = Warehouse.CAPACITIES[resource]["main"]
+                self.main_stock[resource] = Warehouse.CAPACITIES[resource]["main"]  # Restock to full capacity
                 total_cost += cost_main
                 available_cash -= cost_main
             else:
-                # Bankruptcy occurs in main warehouse; allow negative cash
+                # Bankruptcy occurs in the main warehouse; insufficient funds for full restock
                 needed_amount = cost_main - available_cash
-                available_cash -= needed_amount  # Make cash negative by the shortfall amount
                 return {
                     "status": "bankrupt",
                     "warehouse": "main",
@@ -128,15 +133,14 @@ class Warehouse:
                     "available_cash": available_cash
                 }
 
+            # Attempt to restock the auxiliary warehouse
             if available_cash >= cost_aux:
-                # Full restock for auxiliary warehouse if funds allow
-                self.aux_stock[resource] = Warehouse.CAPACITIES[resource]["aux"]
+                self.aux_stock[resource] = Warehouse.CAPACITIES[resource]["aux"]  # Restock to full capacity
                 total_cost += cost_aux
                 available_cash -= cost_aux
             else:
-                # Bankruptcy occurs in auxiliary warehouse; allow negative cash
+                # Bankruptcy occurs in the auxiliary warehouse; insufficient funds for full restock
                 needed_amount = cost_aux - available_cash
-                available_cash -= needed_amount  # Make cash negative by the shortfall amount
                 return {
                     "status": "bankrupt",
                     "warehouse": "auxiliary",
@@ -145,7 +149,13 @@ class Warehouse:
                     "available_cash": available_cash
                 }
 
-        return {"total_cost": total_cost, "available_cash": available_cash}
+        # If restocking was successful for all resources, return success
+        return {
+            "status": "success",
+            "total_cost": total_cost,
+            "available_cash": available_cash
+        }
+
 
 
 
