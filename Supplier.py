@@ -2,14 +2,14 @@ class Supplier:
     # Static pricing information as class-level dictionary
     PRICES = {
         "Slippery Lakes": {
-            "fertiliser": 0.30,  # per litre
-            "feed": 0.10,  # per gram
-            "salt": 0.05  # per gram
+            "fertiliser": 0.0003,  # price per ml (converted from 0.30 per litre)
+            "feed": 1.0,  # price per kg
+            "salt": 1.0  # price per kg
         },
         "Scaly Wholesaler": {
-            "fertiliser": 0.20,  # per litre
-            "feed": 0.40,  # per gram
-            "salt": 0.25  # per gram
+            "fertiliser": 0.0002,  # price per ml (converted from 0.20 per litre)
+            "feed": 1.0,  # price per kg
+            "salt": 1.0  # price per kg
         }
     }
 
