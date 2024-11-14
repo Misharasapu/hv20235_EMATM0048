@@ -1,3 +1,6 @@
+
+from Supplier import Supplier
+
 class Warehouse:
     # Static data for warehouse capacities, depreciation rates, and costs
     CAPACITIES = {
@@ -48,10 +51,11 @@ class Warehouse:
     def check_and_deduct_resources(self, resource, amount_required):
         """
         Check if there are sufficient resources in both main and auxiliary stocks for a given resource.
-        Deduct resources if available, otherwise log "Insufficient ingredients" message.
+        Deduct resources if available, otherwise return details about the shortage.
+
         :param resource: Type of resource (e.g., 'fertiliser').
         :param amount_required: Quantity needed.
-        :return: True if resources were deducted, False if insufficient resources.
+        :return: True if resources were deducted, or a dictionary with 'status': 'insufficient' and shortage details if not.
         """
         total_available = self.main_stock.get(resource, 0) + self.aux_stock.get(resource, 0)
 
@@ -66,10 +70,14 @@ class Warehouse:
                 self.aux_stock[resource] = max(0, self.aux_stock[resource] - amount_needed_from_aux)
             return True
         else:
-            # Log insufficient resources
+            # Return shortage information instead of printing it
             needed_amount = amount_required - total_available
-            print(f"Insufficient ingredients: {resource} need {needed_amount}, storage {total_available}")
-            return False
+            return {
+                "status": "insufficient",
+                "resource": resource,
+                "needed": needed_amount,
+                "available": total_available
+            }
 
     def get_storage_costs(self):
         """Calculate and return detailed storage costs for both main and auxiliary warehouses."""
@@ -88,44 +96,55 @@ class Warehouse:
 
     def restock_to_full(self, supplier_name, available_cash):
         """
-        Restock main and auxiliary warehouses to full capacity if enough cash is available.
+        Attempt to restock main and auxiliary warehouses to full capacity if enough cash is available.
+
         :param supplier_name: Name of the supplier (e.g., "Slippery Lakes").
         :param available_cash: Total cash available for restocking.
-        :return: Total cost of restocking, or amount actually spent if cash is insufficient.
+        :return: A dictionary containing the total cost of restocking, updated cash balance,
+                 or bankruptcy details if cash is insufficient for full restocking.
         """
         total_cost = 0
+        main_costs, aux_costs = self.get_storage_costs()  # Unpack main and aux costs from get_storage_costs
 
         for resource in self.main_stock:
-            # Calculate amount needed to reach full capacity
-            required_main = Warehouse.CAPACITIES[resource]["main"] - self.main_stock[resource]
-            required_aux = Warehouse.CAPACITIES[resource]["aux"] - self.aux_stock[resource]
-            total_required = required_main + required_aux
+            # Get storage costs from precomputed data
+            cost_main = main_costs[resource]
+            cost_aux = aux_costs[resource]
 
-            # Get the price per unit from the supplier
-            price_per_unit = Supplier.get_price(supplier_name, resource)
-            if price_per_unit is None:
-                continue  # Skip if no valid price is available
-
-            # Calculate total cost for restocking
-            total_cost_for_resource = total_required * price_per_unit
-
-            # Attempt full restock if funds allow, prioritize Main
-            if available_cash >= total_cost + total_cost_for_resource:
+            if available_cash >= cost_main:
+                # Full restock for main warehouse if funds allow
                 self.main_stock[resource] = Warehouse.CAPACITIES[resource]["main"]
-                self.aux_stock[resource] = Warehouse.CAPACITIES[resource]["aux"]
-                total_cost += total_cost_for_resource
-                available_cash -= total_cost_for_resource
+                total_cost += cost_main
+                available_cash -= cost_main
             else:
-                # Restock partially based on remaining cash
-                affordable_amount = int(available_cash // price_per_unit)
-                restock_main = min(affordable_amount, required_main)
-                self.main_stock[resource] += restock_main
-                affordable_amount -= restock_main
+                # Bankruptcy occurs in main warehouse
+                needed_amount = cost_main - available_cash
+                return {
+                    "status": "bankrupt",
+                    "warehouse": "main",
+                    "resource": resource,
+                    "needed": needed_amount,
+                    "available_cash": available_cash
+                }
 
-                restock_aux = min(affordable_amount, required_aux)
-                self.aux_stock[resource] += restock_aux
+            if available_cash >= cost_aux:
+                # Full restock for auxiliary warehouse if funds allow
+                self.aux_stock[resource] = Warehouse.CAPACITIES[resource]["aux"]
+                total_cost += cost_aux
+                available_cash -= cost_aux
+            else:
+                # Bankruptcy occurs in auxiliary warehouse
+                needed_amount = cost_aux - available_cash
+                return {
+                    "status": "bankrupt",
+                    "warehouse": "auxiliary",
+                    "resource": resource,
+                    "needed": needed_amount,
+                    "available_cash": available_cash
+                }
 
-                total_cost += (restock_main + restock_aux) * price_per_unit
-                break  # Exit restocking once cash is exhausted
+        return {"total_cost": total_cost, "available_cash": available_cash}
 
-        return total_cost
+
+
+
