@@ -117,8 +117,9 @@ class Warehouse:
                 total_cost += cost_main
                 available_cash -= cost_main
             else:
-                # Bankruptcy occurs in main warehouse
+                # Bankruptcy occurs in main warehouse; allow negative cash
                 needed_amount = cost_main - available_cash
+                available_cash -= needed_amount  # Make cash negative by the shortfall amount
                 return {
                     "status": "bankrupt",
                     "warehouse": "main",
@@ -133,8 +134,9 @@ class Warehouse:
                 total_cost += cost_aux
                 available_cash -= cost_aux
             else:
-                # Bankruptcy occurs in auxiliary warehouse
+                # Bankruptcy occurs in auxiliary warehouse; allow negative cash
                 needed_amount = cost_aux - available_cash
+                available_cash -= needed_amount  # Make cash negative by the shortfall amount
                 return {
                     "status": "bankrupt",
                     "warehouse": "auxiliary",
@@ -144,6 +146,7 @@ class Warehouse:
                 }
 
         return {"total_cost": total_cost, "available_cash": available_cash}
+
 
 
 
