@@ -21,7 +21,7 @@ class Technician:
     @classmethod
     def get_quarterly_labour(cls):
         """Return the total labor each technician provides per quarter in days (9 weeks)."""
-        return cls.LABOUR_PER_QUARTER * 7  # Convert weeks to days
+        return cls.LABOUR_PER_QUARTER
 
     @classmethod
     def calculate_total_labour(cls, num_technicians):

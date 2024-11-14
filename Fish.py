@@ -76,21 +76,24 @@ class Fish:
     @classmethod
     def get_maintenance_time(cls, fish_type):
         """
-        Retrieve the maintenance time required for this fish type.
+        Retrieve the maintenance time in weeks for this fish type.
 
         :param fish_type: Type of fish (e.g., 'Clef Fins')
-        :return: Maintenance time for the given fish type.
+        :return: Maintenance time in weeks for the given fish type.
         """
-        return cls.FISH_DATA.get(fish_type, {}).get("maintenance_time", 0)
+        maintenance_time_days = cls.FISH_DATA.get(fish_type, {}).get("maintenance_time", 0)
+        # Convert days to weeks (assuming a 5-day work week)
+        maintenance_time_weeks = maintenance_time_days / 5
+        return maintenance_time_weeks
 
     @classmethod
     def calculate_total_maintenance_time(cls, fish_type, quantity):
         """
-        Calculate the total maintenance time required based on the quantity of fish.
+        Calculate the total maintenance time in weeks required based on the quantity of fish.
 
         :param fish_type: Type of fish (e.g., 'Clef Fins')
         :param quantity: Number of fish being managed or sold.
-        :return: Total maintenance time required for the given quantity of fish.
+        :return: Total maintenance time in weeks required for the given quantity of fish.
         """
         maintenance_time_per_fish = cls.get_maintenance_time(fish_type)
         return maintenance_time_per_fish * quantity
