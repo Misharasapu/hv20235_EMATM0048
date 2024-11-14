@@ -16,9 +16,9 @@ class Warehouse:
     }
 
     COSTS = {
-        "fertiliser": 0.10,  # cost per litre
-        "feed": 0.001,  # cost per gram (1 kg = £1)
-        "salt": 0.001  # cost per gram
+        "fertiliser": 0.0001,  # cost per ml
+        "feed": 1,  # cost per kg
+        "salt": 1  # cost per kg
     }
 
     def __init__(self):
