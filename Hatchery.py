@@ -18,12 +18,15 @@ class Hatchery:
     FIXED_QUARTERLY_COST = 1500  # Fixed cost incurred each quarter
 
     def __init__(self):
-        # Initialize starting cash balance
         self.cash_balance = 10000  # Starting cash balance for the hatchery
-        # Initialize an empty list to hold technician objects
         self.technicians = []
-        # Create a single Warehouse instance
         self.warehouse = Warehouse()
+        self.available_labor = 0  # New attribute to track labor per quarter
+
+    def start_new_quarter(self):
+        """Reset available labor based on the number of technicians at the start of each quarter."""
+        self.available_labor = Technician.calculate_total_labour(len(self.technicians))
+        print(f"Starting new quarter with {self.available_labor} weeks of available labor.")
 
     @classmethod
     def get_demand_and_price(cls, fish_type):
@@ -90,40 +93,23 @@ class Hatchery:
         return removed_technicians
 
     def sell_fish(self, fish_type, requested_quantity):
-        """
-        Attempt to sell the requested quantity of a specific fish type, checking for labor and resource constraints.
-        Returns a dictionary with sale data or constraints.
-
-        :param fish_type: Type of fish to sell.
-        :param requested_quantity: Quantity of fish the manager wants to sell.
-        :return: Dictionary with sale data or constraint details if labor/resources are insufficient.
-        """
         demand_data = self.CUSTOMER_DEMAND.get(fish_type)
         if not demand_data:
             return {"status": "error", "message": f"{fish_type} is not available for sale."}
 
-        # Retrieve demand and price
         demand = demand_data["demand"]
         price = demand_data["price"]
-
-        # Ensure requested quantity does not exceed demand
         sell_quantity = min(requested_quantity, demand)
 
-        # Get total maintenance time and resource needs for the requested quantity
-        resource_needs = Fish.calculate_resource_needs(fish_type, sell_quantity)
+        # Calculate maintenance time for the requested sale
         maintenance_time = Fish.calculate_total_maintenance_time(fish_type, sell_quantity)
 
         # Check labor constraint
-        available_labor = Technician.calculate_total_labour(len(self.technicians))
-        if available_labor < maintenance_time:
-            return {
-                "status": "insufficient_labor",
-                "required": maintenance_time,
-                "available": available_labor
-            }
-
-        # Check resource constraints
+        labor_issue = self.available_labor < maintenance_time
         insufficient_resources = {}
+
+        # Resource check and deduction
+        resource_needs = Fish.calculate_resource_needs(fish_type, sell_quantity)
         for resource, amount_needed in resource_needs.items():
             available_amount = self.warehouse.main_stock.get(resource, 0) + self.warehouse.aux_stock.get(resource, 0)
             if available_amount < amount_needed:
@@ -132,13 +118,34 @@ class Hatchery:
                     "available": available_amount
                 }
 
-        if insufficient_resources:
+        # Determine return status based on labor and resources
+        if labor_issue and insufficient_resources:
+            # Both labor and resources are insufficient
+            return {
+                "status": "insufficient_labor_and_resources",
+                "required_labor": maintenance_time,
+                "available_labor": self.available_labor,
+                "resources": insufficient_resources
+            }
+        elif labor_issue:
+            # Only labor is insufficient
+            return {
+                "status": "insufficient_labor",
+                "required_labor": maintenance_time,
+                "available_labor": self.available_labor
+            }
+        elif insufficient_resources:
+            # Only resources are insufficient
             return {
                 "status": "insufficient_resources",
                 "resources": insufficient_resources
             }
 
-        # Deduct resources if constraints are met
+        # Deduct labor and resources if both are sufficient
+        self.available_labor -= maintenance_time
+        print(
+            f"Deducted {maintenance_time} weeks of labor for {sell_quantity} of {fish_type}. Remaining labor: {self.available_labor}")
+
         for resource, amount_needed in resource_needs.items():
             self.warehouse.check_and_deduct_resources(resource, amount_needed)
 
