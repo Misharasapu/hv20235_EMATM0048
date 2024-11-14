@@ -60,9 +60,6 @@ class Hatchery:
         :param technician_names: List of names for technicians to be added.
         :return: List of successfully added technician names.
         """
-        if len(self.technicians) + len(technician_names) > Technician.MAX_TECHNICIANS:
-            return []  # Exceeds maximum, return an empty list
-
         hired_technicians = []
         for name in technician_names:
             if len(self.technicians) < Technician.MAX_TECHNICIANS:
@@ -70,7 +67,7 @@ class Hatchery:
                 self.technicians.append(new_technician)
                 hired_technicians.append(name)
             else:
-                break
+                break  # Stop adding if we reach the max limit
 
         return hired_technicians
 
@@ -83,63 +80,86 @@ class Hatchery:
         """
         removed_technicians = []
 
-        if len(self.technicians) - num_to_remove < Technician.MIN_TECHNICIANS:
-            return []  # Cannot remove as it would drop below minimum
-
         for _ in range(num_to_remove):
-            if self.technicians:
+            if len(self.technicians) > Technician.MIN_TECHNICIANS:
                 removed_technician = self.technicians.pop()
                 removed_technicians.append(removed_technician.name)
+            else:
+                break  # Stop removing if we reach the min limit
 
         return removed_technicians
 
-    def sell_fish(self):
+    def sell_fish(self, fish_type, requested_quantity):
         """
-        Sell fish based on customer demand, available labor, and resources.
-        Returns sales results and revenue without direct output to the console.
+        Attempt to sell the requested quantity of a specific fish type, checking for labor and resource constraints.
+        If constraints are not met, it returns a message for the main loop to prompt for a new quantity.
 
-        :return: Dictionary with sale quantities, revenues, and unmet demand details.
+        :param fish_type: Type of fish to sell.
+        :param requested_quantity: Quantity of fish the manager wants to sell.
+        :return: Dictionary with sale status, resource needs, and any constraint messages.
         """
-        total_revenue = 0
+        demand_data = self.CUSTOMER_DEMAND.get(fish_type)
+        if not demand_data:
+            return {"message": f"{fish_type} is not available for sale."}
+
+        # Retrieve demand and price
+        demand = demand_data["demand"]
+        price = demand_data["price"]
+
+        # Ensure requested quantity does not exceed demand
+        sell_quantity = min(requested_quantity, demand)
+
+        # Get total maintenance time and resource needs for the sell_quantity
+        resource_needs = Fish.calculate_resource_needs(fish_type, sell_quantity)
+        maintenance_time = Fish.calculate_total_maintenance_time(fish_type, sell_quantity)
+
+        # Check labor constraint
         available_labor = Technician.calculate_total_labour(len(self.technicians))
-        sales_results = []
+        if available_labor < maintenance_time:
+            # Insufficient labor, provide feedback and return without deducting
+            return {
+                "message": f"Insufficient labor: required {maintenance_time}, available {available_labor}. Please enter a new quantity."
+            }
 
-        for fish_type, demand_data in self.CUSTOMER_DEMAND.items():
-            demand = demand_data["demand"]
-            price = demand_data["price"]
-            resource_needs = Fish.calculate_resource_needs(fish_type, demand)
-            maintenance_time = Fish.calculate_total_maintenance_time(fish_type, demand)
-            sell_quantity = demand
+        # Check resource constraints without additional multiplication
+        insufficient_resources = {}
+        for resource, amount_needed in resource_needs.items():
+            available_amount = (
+                    self.warehouse.main_stock.get(resource, 0) +
+                    self.warehouse.aux_stock.get(resource, 0)
+            )
+            if available_amount < amount_needed:
+                insufficient_resources[resource] = {
+                    "needed": amount_needed,
+                    "available": available_amount
+                }
 
-            if available_labor < maintenance_time * demand:
-                max_labor_based_quantity = int(available_labor // maintenance_time)
-                sell_quantity = min(sell_quantity, max_labor_based_quantity)
+        if insufficient_resources:
+            # Return detailed message about insufficient resources without deducting anything
+            resource_message = "Insufficient ingredients:\n" + "\n".join(
+                [f"{resource} need {data['needed']}, available {data['available']}"
+                 for resource, data in insufficient_resources.items()]
+            )
+            return {
+                "message": resource_message + ". Please enter a new quantity."
+            }
 
-            for resource, amount_needed_per_unit in resource_needs.items():
-                total_amount_needed = sell_quantity * amount_needed_per_unit
-                available_amount = self.warehouse.main_stock.get(resource, 0) + self.warehouse.aux_stock.get(resource,
-                                                                                                             0)
+        # If there are no constraints, deduct resources and labor
+        for resource, amount_needed in resource_needs.items():
+            self.warehouse.check_and_deduct_resources(resource, amount_needed)
+        available_labor -= maintenance_time
 
-                if available_amount < total_amount_needed:
-                    possible_quantity_based_on_resource = int(available_amount // amount_needed_per_unit)
-                    sell_quantity = min(sell_quantity, possible_quantity_based_on_resource)
+        # Calculate revenue for the sale and update cash balance
+        revenue = sell_quantity * price
+        self.cash_balance += revenue
 
-            for resource, amount_needed_per_unit in resource_needs.items():
-                self.warehouse.check_and_deduct_resources(resource, sell_quantity * amount_needed_per_unit)
-
-            revenue = sell_quantity * price
-            total_revenue += revenue
-            available_labor -= sell_quantity * maintenance_time
-
-            sales_results.append({
-                "fish_type": fish_type,
-                "demand": demand,
-                "sell_quantity": sell_quantity,
-                "revenue": revenue
-            })
-
-        self.cash_balance += total_revenue
-        return {"total_revenue": total_revenue, "sales_details": sales_results}
+        return {
+            "fish_type": fish_type,
+            "requested_quantity": sell_quantity,
+            "sell_quantity": sell_quantity,
+            "revenue": revenue,
+            "message": "Sale completed successfully"
+        }
 
     def pay_technicians(self):
         """
