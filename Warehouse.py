@@ -1,7 +1,7 @@
 class Warehouse:
     # Static data for warehouse capacities, depreciation rates, and costs
     CAPACITIES = {
-        "fertiliser": {"main": 20, "aux": 10},  # litres
+        "fertiliser": {"main": 20000, "aux": 10000},  # Converted from litres to ml
         "feed": {"main": 400, "aux": 200},  # kg
         "salt": {"main": 200, "aux": 100}  # kg
     }
