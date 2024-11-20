@@ -36,12 +36,12 @@ def main():
         for fish_type, data in hatchery.CUSTOMER_DEMAND.items():
             demand = data["demand"]
             while True:
-                sell_quantity = min(demand, int(input(f"Fish {fish_type}, demand {demand}, sell {demand}: ")))
+                sell_quantity = int(input(f"Fish {fish_type}, demand {demand}, sell {demand}: "))
                 sale_result = hatchery.sell_fish(fish_type, sell_quantity)
 
                 if sale_result["status"] == "success":
                     print(f"Sold {sale_result['sell_quantity']} of {fish_type}")
-                    break  # Successful sale, exit the loop for this fish type
+                    break  # Exit loop on successful sale
 
                 elif sale_result["status"] == "insufficient_labor_and_resources":
                     print(
@@ -53,15 +53,15 @@ def main():
                         f"Insufficient resources and labor for {fish_type}. Enter a new quantity or 0 to skip: ")
                     if retry == "0":
                         print(f"Fish {fish_type}, demand {demand}, sell {sell_quantity}: 0")
-                        break
+                        break  # Exit loop if user skips by entering 0
                     else:
-                        demand = int(retry)  # Update with a new sell quantity based on user input
+                        continue  # Continue loop with new input
 
                 elif sale_result["status"] == "insufficient_labor":
                     print(
                         f"Insufficient labour: required {sale_result['required_labor']:.2f} weeks, available {sale_result['available_labor']:.2f}")
                     print(f"Fish {fish_type}, demand {demand}, sell {sell_quantity}: 0")
-                    break
+                    break  # Exit loop since no sale happens
 
                 elif sale_result["status"] == "insufficient_resources":
                     print("Insufficient ingredients:")
@@ -70,9 +70,9 @@ def main():
                     retry = input(f"Insufficient resources for {fish_type}. Enter a new quantity or 0 to skip: ")
                     if retry == "0":
                         print(f"Fish {fish_type}, demand {demand}, sell {sell_quantity}: 0")
-                        break
+                        break  # Exit loop if user skips by entering 0
                     else:
-                        demand = int(retry)  # Update with a new sell quantity based on user input
+                        continue  # Continue loop with new input
 
         # Pay technicians
         technician_payments = hatchery.pay_technicians()
@@ -81,13 +81,26 @@ def main():
 
         # Deduct fixed costs
         print(f"Paid rent/utilities {Hatchery.FIXED_QUARTERLY_COST}")
+        hatchery.cash_balance -= Hatchery.FIXED_QUARTERLY_COST
 
-        # Calculate and display storage costs
+        # Calculate and deduct storage costs
         storage_costs = hatchery.calculate_storage_costs()
+        hatchery.cash_balance -= storage_costs["total_storage_cost"]
+
+        # Display storage costs
         for resource, cost in storage_costs["main_costs"].items():
             print(f"Warehouse Main: {resource.capitalize()} cost {cost:.2f}")
         for resource, cost in storage_costs["aux_costs"].items():
             print(f"Warehouse Auxiliary: {resource.capitalize()} cost {cost:.2f}")
+
+        # Apply depreciation at the end of every quarter
+        print("\nApplying depreciation to the warehouses...")
+        main_stock, aux_stock = hatchery.warehouse.calculate_depreciation()
+        print("Depreciation applied. Updated stock levels:")
+        for resource, amount in main_stock.items():
+            print(f"Warehouse Main: {resource.capitalize()}, {amount}")
+        for resource, amount in aux_stock.items():
+            print(f"Warehouse Auxiliary: {resource.capitalize()}, {amount}")
 
         # Display vendor list and prompt user for selection
         print("List of Vendors:")
@@ -118,11 +131,6 @@ def main():
                 print(f"Went bankrupt restocking warehouse {restock_result['warehouse']} in quarter {quarter}")
         else:
             print("Invalid vendor selection.")
-
-
-
-
-
 
 
 # Run the main function
