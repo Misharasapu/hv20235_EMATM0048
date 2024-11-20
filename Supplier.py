@@ -3,13 +3,13 @@ class Supplier:
     PRICES = {
         "Slippery Lakes": {
             "fertiliser": 0.0003,  # price per ml (converted from 0.30 per litre)
-            "feed": 1.0,  # price per kg
-            "salt": 1.0  # price per kg
+            "feed": 0.1,  # price per kg
+            "salt": 0.05  # price per kg
         },
         "Scaly Wholesaler": {
             "fertiliser": 0.0002,  # price per ml (converted from 0.20 per litre)
-            "feed": 1.0,  # price per kg
-            "salt": 1.0  # price per kg
+            "feed": 0.4,  # price per kg
+            "salt": 0.25  # price per kg
         }
     }
 
