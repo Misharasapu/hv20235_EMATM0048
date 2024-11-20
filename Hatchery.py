@@ -223,7 +223,7 @@ class Hatchery:
                 "warehouse": restock_result["warehouse"],
                 "resource": restock_result["resource"],
                 "needed": restock_result["needed"],
-                "remaining_cash_balance": self.cash_balance
+                "available_cash": self.cash_balance
             }
         else:
             # Deduct total restock cost from cash balance
@@ -232,7 +232,7 @@ class Hatchery:
             return {
                 "status": "success",
                 "total_restock_cost": total_restock_cost,
-                "remaining_cash_balance": self.cash_balance,
+                "available_cash": self.cash_balance,
                 "main_stock": self.warehouse.main_stock,
                 "aux_stock": self.warehouse.aux_stock
             }

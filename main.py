@@ -12,8 +12,13 @@ def main():
     # Debug: Initial cash balance
     print(f"DEBUG: Initial Cash Balance: {hatchery.cash_balance}")
 
-    # Prompt the user to enter the number of quarters
-    num_quarters = int(input("Please enter number of quarters: "))
+    # Prompt the user to enter the number of quarters, defaulting to 8 if no input is given
+    num_quarters_input = input("Please enter number of quarters (default: 8): ")
+    if num_quarters_input.strip() == "":
+        num_quarters = 8  # Default to 8 if input is empty
+    else:
+        num_quarters = int(num_quarters_input)  # Convert input to integer
+
 
     for quarter in range(1, num_quarters + 1):
         print(
@@ -134,10 +139,10 @@ def main():
             # Handle restocking results
             if "total_restock_cost" in restock_result:
                 print(
-                    f"Restocked successfully with {selected_vendor}. Remaining cash balance: {restock_result['remaining_cash_balance']:.2f}")
+                    f"Restocked successfully with {selected_vendor}. Remaining cash balance: {restock_result['available_cash']:.2f}")
                 # Debug: Restocking details
                 print(f"DEBUG: Total Restocking Costs: {restock_result['total_restock_cost']}")
-                print(f"DEBUG: Cash Balance after restocking: {restock_result['remaining_cash_balance']}")
+                print(f"DEBUG: Cash Balance after restocking: {restock_result['available_cash']}")
                 print("Updated stock levels:")
                 for resource, amount in restock_result["main_stock"].items():
                     print(
@@ -149,6 +154,23 @@ def main():
                 print(
                     f"Can't restock {restock_result['resource']}, insufficient funds. Need {restock_result['needed']:.2f} but only have {restock_result['available_cash']:.2f}")
                 print(f"Went bankrupt restocking warehouse {restock_result['warehouse']} in quarter {quarter}")
+
+                # Display final state
+                print(f"\n=== FINAL STATE quarter {quarter + 1} ===")
+                print(f"\nHatchery Name: Eastaboga, Cash: {hatchery.cash_balance:.2f}")
+                print("Warehouse Main")
+                for resource, amount in hatchery.warehouse.main_stock.items():
+                    print(f"  {resource.capitalize()}, {amount} (capacity={Warehouse.CAPACITIES[resource]['main']})")
+                print("Warehouse Auxiliary")
+                for resource, amount in hatchery.warehouse.aux_stock.items():
+                    print(f"  {resource.capitalize()}, {amount} (capacity={Warehouse.CAPACITIES[resource]['aux']})")
+                print("Technicians")
+                for technician in hatchery.technicians:
+                    print(f"  Technician {technician.name}, weekly rate={Technician.WEEKLY_WAGE}")
+
+
+                # Exit the simulation loop
+                break
         else:
             print("Invalid vendor selection.")
 
