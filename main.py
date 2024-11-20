@@ -9,6 +9,9 @@ def main():
     # Initialize the Hatchery instance
     hatchery = Hatchery()
 
+    # Debug: Initial cash balance
+    print(f"DEBUG: Initial Cash Balance: {hatchery.cash_balance}")
+
     # Prompt the user to enter the number of quarters
     num_quarters = int(input("Please enter number of quarters: "))
 
@@ -32,6 +35,9 @@ def main():
         # Reset labor for the new quarter
         hatchery.start_new_quarter()
 
+        # Debug: Labor after reset
+        print(f"DEBUG: Starting labor after reset: {hatchery.available_labor}")
+
         # Fish sales management
         for fish_type, data in hatchery.CUSTOMER_DEMAND.items():
             demand = data["demand"]
@@ -41,6 +47,9 @@ def main():
 
                 if sale_result["status"] == "success":
                     print(f"Sold {sale_result['sell_quantity']} of {fish_type}")
+                    # Debug: Sale success details
+                    print(f"DEBUG: Sold {sale_result['sell_quantity']} of {fish_type} for revenue {sale_result['revenue']}.")
+                    print(f"DEBUG: Updated Cash Balance: {hatchery.cash_balance}")
                     break  # Exit loop on successful sale
 
                 elif sale_result["status"] == "insufficient_labor_and_resources":
@@ -78,14 +87,22 @@ def main():
         technician_payments = hatchery.pay_technicians()
         for payment in technician_payments["individual_payments"]:
             print(f"Paid {payment['name']}, weekly rate={Technician.WEEKLY_WAGE} amount {payment['amount']}")
+        # Debug: Cash balance after technician payments
+        print(f"DEBUG: Cash Balance after technician payments: {hatchery.cash_balance}")
 
         # Deduct fixed costs
         print(f"Paid rent/utilities {Hatchery.FIXED_QUARTERLY_COST}")
         hatchery.cash_balance -= Hatchery.FIXED_QUARTERLY_COST
+        # Debug: Cash balance after fixed costs
+        print(f"DEBUG: Cash Balance after fixed costs: {hatchery.cash_balance}")
 
         # Calculate and deduct storage costs
         storage_costs = hatchery.calculate_storage_costs()
         hatchery.cash_balance -= storage_costs["total_storage_cost"]
+
+        # Debug: Storage cost details
+        print(f"DEBUG: Total Storage Costs: {storage_costs['total_storage_cost']}")
+        print(f"DEBUG: Cash Balance after storage costs: {hatchery.cash_balance}")
 
         # Display storage costs
         for resource, cost in storage_costs["main_costs"].items():
@@ -118,6 +135,9 @@ def main():
             if "total_restock_cost" in restock_result:
                 print(
                     f"Restocked successfully with {selected_vendor}. Remaining cash balance: {restock_result['remaining_cash_balance']:.2f}")
+                # Debug: Restocking details
+                print(f"DEBUG: Total Restocking Costs: {restock_result['total_restock_cost']}")
+                print(f"DEBUG: Cash Balance after restocking: {restock_result['remaining_cash_balance']}")
                 print("Updated stock levels:")
                 for resource, amount in restock_result["main_stock"].items():
                     print(
@@ -131,6 +151,9 @@ def main():
                 print(f"Went bankrupt restocking warehouse {restock_result['warehouse']} in quarter {quarter}")
         else:
             print("Invalid vendor selection.")
+
+        # Debug: End of quarter cash balance
+        print(f"DEBUG: End of Quarter {quarter} Cash Balance: {hatchery.cash_balance}")
 
 
 # Run the main function
