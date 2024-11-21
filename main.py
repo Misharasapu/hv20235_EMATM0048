@@ -46,47 +46,42 @@ def main():
         # Fish sales management
         for fish_type, data in hatchery.CUSTOMER_DEMAND.items():
             demand = data["demand"]
+            current_quantity = None  # Track the latest sell quantity
+
             while True:
-                sell_quantity = int(input(f"Fish {fish_type}, demand {demand}, sell {demand}: "))
-                sale_result = hatchery.sell_fish(fish_type, sell_quantity)
+                # Prompt user for sell quantity only if not retrying
+                if current_quantity is None:
+                    current_quantity = int(input(f"Fish {fish_type}, demand {demand}, sell {demand}: "))
+
+                sale_result = hatchery.sell_fish(fish_type, current_quantity)
 
                 if sale_result["status"] == "success":
+                    # Process successful sale
                     print(f"Sold {sale_result['sell_quantity']} of {fish_type}")
-                    # Debug: Sale success details
-                    print(f"DEBUG: Sold {sale_result['sell_quantity']} of {fish_type} for revenue {sale_result['revenue']}.")
+                    print(
+                        f"DEBUG: Sold {sale_result['sell_quantity']} of {fish_type} for revenue {sale_result['revenue']}.")
                     print(f"DEBUG: Updated Cash Balance: {hatchery.cash_balance}")
                     break  # Exit loop on successful sale
 
-                elif sale_result["status"] == "insufficient_labor_and_resources":
-                    print(
-                        f"Insufficient labour: required {sale_result['required_labor']:.2f} weeks, available {sale_result['available_labor']:.2f}")
-                    print("Insufficient ingredients:")
-                    for resource, info in sale_result["resources"].items():
-                        print(f"   {resource} need {info['needed']}, storage {info['available']}")
-                    retry = input(
-                        f"Insufficient resources and labor for {fish_type}. Enter a new quantity or 0 to skip: ")
-                    if retry == "0":
-                        print(f"Fish {fish_type}, demand {demand}, sell {sell_quantity}: 0")
-                        break  # Exit loop if user skips by entering 0
-                    else:
-                        continue  # Continue loop with new input
+                elif sale_result["status"] in ["insufficient_labor", "insufficient_resources",
+                                               "insufficient_labor_and_resources"]:
+                    # Inform the user of the issue
+                    if "required_labor" in sale_result:
+                        print(
+                            f"Insufficient labour: required {sale_result['required_labor']:.2f} weeks, available {sale_result['available_labor']:.2f}")
+                    if "resources" in sale_result:
+                        print("Insufficient ingredients:")
+                        for resource, info in sale_result["resources"].items():
+                            print(f"   {resource} need {info['needed']}, storage {info['available']}")
 
-                elif sale_result["status"] == "insufficient_labor":
-                    print(
-                        f"Insufficient labour: required {sale_result['required_labor']:.2f} weeks, available {sale_result['available_labor']:.2f}")
-                    print(f"Fish {fish_type}, demand {demand}, sell {sell_quantity}: 0")
-                    break  # Exit loop since no sale happens
-
-                elif sale_result["status"] == "insufficient_resources":
-                    print("Insufficient ingredients:")
-                    for resource, info in sale_result["resources"].items():
-                        print(f"   {resource} need {info['needed']}, storage {info['available']}")
-                    retry = input(f"Insufficient resources for {fish_type}. Enter a new quantity or 0 to skip: ")
-                    if retry == "0":
-                        print(f"Fish {fish_type}, demand {demand}, sell {sell_quantity}: 0")
-                        break  # Exit loop if user skips by entering 0
+                    # Prompt user for retry
+                    retry = int(input(f"Enter a new quantity for {fish_type} or 0 to skip: "))
+                    if retry == 0:
+                        print(f"Skipping sale of {fish_type}.")
+                        break  # Skip this fish type
                     else:
-                        continue  # Continue loop with new input
+                        current_quantity = retry  # Update current_quantity for retry
+                        continue  # Retry with new input
 
         # Pay technicians
         technician_payments = hatchery.pay_technicians()
