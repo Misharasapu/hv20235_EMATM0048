@@ -17,7 +17,7 @@ def main():
     if num_quarters_input.strip() == "":
         num_quarters = 8  # Default to 8 if input is empty
     else:
-        num_quarters = int(num_quarters_input)  # Convert input to integer
+        num_quarters = min(int(num_quarters_input), 8)  # Cap the number of quarters at 8
 
 
     for quarter in range(1, num_quarters + 1):
@@ -171,6 +171,9 @@ def main():
 
         # Debug: End of quarter cash balance
         print(f"DEBUG: End of Quarter {quarter} Cash Balance: {hatchery.cash_balance}")
+
+    print("\nSimulation completed.")
+    print(f"Final Cash Balance: {hatchery.cash_balance:.2f}")
 
 
 # Run the main function
