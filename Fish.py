@@ -1,6 +1,6 @@
 """
-Author: [Your Name]
-Section: [Your Section/Group]
+Author: Mishara Sapukotanage
+Section: Data Science
 Description: This file contains the Fish class, which provides static data and
 methods to manage fish-related operations, including resource calculation,
 maintenance time determination, and listing fish types.

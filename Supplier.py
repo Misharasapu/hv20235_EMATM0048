@@ -1,6 +1,6 @@
 """
-Author: [Your Name]
-Section: [Your Section/Group]
+Author: Mishara Sapukotanage
+Section: Data Science
 Description: This file contains the Supplier class, which manages information about
 the suppliers available for restocking resources. It includes methods for retrieving
 pricing information and listing suppliers.

@@ -1,6 +1,6 @@
 """
-Author: [Your Name]
-Section: [Your Section/Group]
+Author: Mishara Sapukotanage
+Section: Data Science
 Description: This file contains the Technician class, which represents employees working
 at the hatchery. It includes attributes and methods for managing wages, labour,
 and specialisations of technicians.

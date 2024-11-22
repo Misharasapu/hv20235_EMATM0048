@@ -1,6 +1,6 @@
 """
-Author: [Your Name]
-Section: [Your Section/Group]
+Author: Mishara Sapukotanage
+Section: Data Science
 Description: This file contains the Warehouse class, which manages stock levels,
 depreciation, storage costs, and resource restocking for the hatchery. It interacts with
 the Supplier class to handle pricing and ensures resource availability for operations.
