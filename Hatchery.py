@@ -3,8 +3,28 @@ from Warehouse import Warehouse
 from Fish import Fish
 from Supplier import Supplier
 
+"""
+Author: Mishara Sapukotanage
+Section: Data Science
+Description: This file contains the Hatchery class, which represents the main operations 
+of the fish hatchery. It handles technician management, fish sales, resource management, 
+and overall cash flow. The Hatchery class interacts with other classes such as Warehouse, 
+Technician, Fish, and Supplier to simulate the hatchery's operations.
+"""
 
 class Hatchery:
+    """
+    The Hatchery class represents the main operations of the fish hatchery, including
+    managing technicians, selling fish, and maintaining resources and cash flow.
+
+    Attributes:
+        CUSTOMER_DEMAND (dict): Static data about customer demand and prices for fish species.
+        FIXED_QUARTERLY_COST (int): Fixed cost incurred by the hatchery each quarter.
+        cash_balance (float): Current cash balance of the hatchery.
+        technicians (list): List of Technician objects employed by the hatchery.
+        warehouse (Warehouse): Instance of the Warehouse class to manage resources.
+        available_labor (float): Tracks available labor hours for the quarter.
+    """
     # Static data related to customer demand and fixed quarterly cost
     CUSTOMER_DEMAND = {
         "Clef Fins": {"demand": 25, "price": 250},
@@ -17,13 +37,20 @@ class Hatchery:
     FIXED_QUARTERLY_COST = 1500  # Fixed cost incurred each quarter
 
     def __init__(self):
+        """
+        Initialize the Hatchery class with a starting cash balance, empty list of technicians,
+        and a Warehouse instance. Labor availability is set to 0 initially.
+        """
         self.cash_balance = 10000  # Starting cash balance for the hatchery
         self.technicians = []
         self.warehouse = Warehouse()
-        self.available_labor = 0  # New attribute to track labor per quarter
+        self.available_labor = 0  # Tracks available labor hours per quarter
 
     def start_new_quarter(self):
-        """Reset available labor based on the number of technicians at the start of each quarter."""
+        """
+        Reset available labor based on the number of technicians at the start of each quarter.
+        Calculates labor using the Technician class's static method.
+        """
         self.available_labor = Technician.calculate_total_labour(len(self.technicians))
 
     @classmethod
@@ -31,35 +58,45 @@ class Hatchery:
         """
         Retrieve the demand and price for a specific fish type.
 
-        :param fish_type: Name of the fish species.
-        :return: Dictionary containing 'demand' and 'price' for the specified fish, or None if not found.
+        Args:
+            fish_type (str): Name of the fish species.
+
+        Returns:
+            dict: Dictionary containing 'demand' and 'price' for the specified fish,
+            or None if the fish type is not found.
         """
         return cls.CUSTOMER_DEMAND.get(fish_type, None)
 
     @classmethod
     def get_fixed_cost(cls):
         """
-        Return the fixed quarterly cost for the hatchery.
+        Retrieve the fixed quarterly cost for the hatchery.
 
-        :return: Fixed cost for the quarter.
+        Returns:
+            int: Fixed cost incurred each quarter.
         """
         return cls.FIXED_QUARTERLY_COST
 
     def get_cash_balance(self):
         """
-        Return the current cash balance of the hatchery.
+        Retrieve the current cash balance of the hatchery.
 
-        :return: Current cash balance.
+        Returns:
+            float: Current cash balance.
         """
         return self.cash_balance
 
     def add_technicians(self, technician_details):
         """
-        Add new technicians to the hatchery based on provided details.
-        Ensures total number of technicians does not exceed the maximum limit.
+        Add new technicians to the hatchery based on the provided details. Ensures
+        the total number of technicians does not exceed the maximum allowed.
 
-        :param technician_details: List of tuples with technician names and optional specializations.
-        :return: List of successfully added technician names.
+        Args:
+            technician_details (list of tuples): Each tuple contains the technician's
+            name and an optional specialization.
+
+        Returns:
+            list: List of successfully added technician names.
         """
         hired_technicians = []
         for name, specialization in technician_details:
@@ -68,16 +105,20 @@ class Hatchery:
                 self.technicians.append(new_technician)
                 hired_technicians.append(name)
             else:
-                break  # Stop adding if we reach the max limit
+                break  # Stop adding if the maximum limit is reached
 
         return hired_technicians
 
     def remove_technicians(self, num_to_remove):
         """
-        Remove technicians from the hatchery. Ensures the total number of technicians does not fall below the minimum limit.
+        Remove technicians from the hatchery. Ensures the total number of technicians
+        does not fall below the minimum allowed.
 
-        :param num_to_remove: Number of technicians to remove.
-        :return: List of removed technician names for potential verification/testing.
+        Args:
+            num_to_remove (int): Number of technicians to remove.
+
+        Returns:
+            list: List of removed technician names.
         """
         removed_technicians = []
 
@@ -86,16 +127,22 @@ class Hatchery:
                 removed_technician = self.technicians.pop()
                 removed_technicians.append(removed_technician.name)
             else:
-                break  # Stop removing if we reach the min limit
+                break  # Stop removing if the minimum limit is reached
 
         return removed_technicians
 
     def sell_fish(self, fish_type, requested_quantity):
         """
-        Sell a specified quantity of a fish type, prioritizing specialized technicians.
-        :param fish_type: Type of fish to sell.
-        :param requested_quantity: Quantity of fish to sell.
-        :return: Result dictionary with sale status and details.
+        Attempt to sell a specified quantity of a fish type, considering labor and resource
+        constraints.
+
+        Args:
+            fish_type (str): Type of fish to sell.
+            requested_quantity (int): Quantity of fish to sell.
+
+        Returns:
+            dict: Dictionary containing the result of the sale, including status, quantity sold,
+            revenue, and errors if any.
         """
         demand_data = self.CUSTOMER_DEMAND.get(fish_type)
         if not demand_data:
@@ -104,7 +151,7 @@ class Hatchery:
         demand = demand_data["demand"]
         price = demand_data["price"]
 
-        # Exit early if sell_quantity is 0 to skip this fish type without errors
+        # Exit early if no quantity is requested
         if requested_quantity == 0:
             return {"status": "skipped", "fish_type": fish_type}
 
@@ -121,16 +168,14 @@ class Hatchery:
             technician for technician in self.technicians if not technician.is_specialised_for(fish_type)
         ]
 
-        # Calculate how much specialized labor can handle
+        # Calculate equivalent maintenance time for specialized and regular technicians
         specialized_labor_available = len(specialized_technicians) * Technician.LABOUR_PER_QUARTER
-        equivalent_specialized_time = specialized_labor_available * (3 / 2)  # Convert specialized labor to equivalent time
+        equivalent_specialized_time = specialized_labor_available * (3 / 2)
         max_specialized_quantity = equivalent_specialized_time / (base_maintenance_time / sell_quantity)
 
         if max_specialized_quantity >= sell_quantity:
-            # Specialized technicians can handle the entire sale
             actual_maintenance_time = base_maintenance_time * (2 / 3)
         else:
-            # Specialized technicians handle part of the sale
             specialized_maintenance_time = max_specialized_quantity * (base_maintenance_time / sell_quantity) * (2 / 3)
             remaining_quantity = sell_quantity - max_specialized_quantity
             regular_maintenance_time = remaining_quantity * (base_maintenance_time / sell_quantity)
@@ -150,7 +195,7 @@ class Hatchery:
                     "available": available_amount
                 }
 
-        # Determine return status based on labor and resources
+        # Determine sale status based on labor and resources
         if labor_issue and insufficient_resources:
             return {
                 "status": "insufficient_labor_and_resources",
@@ -170,10 +215,8 @@ class Hatchery:
                 "resources": insufficient_resources
             }
 
-        # Deduct labor
+        # Deduct labor and resources
         self.available_labor -= actual_maintenance_time
-
-        # Deduct resources
         for resource, amount_needed in resource_needs.items():
             self.warehouse.check_and_deduct_resources(resource, amount_needed)
 
@@ -190,17 +233,16 @@ class Hatchery:
 
     def pay_technicians(self):
         """
-        Pays each technician based on their quarterly wage and updates the hatchery's cash balance.
-        Returns a list of payment details for each technician without console output.
+        Pay all technicians their quarterly wages and update the cash balance.
 
-        :return: Total payment amount and a list of individual payment details.
+        Returns:
+            dict: Contains total payment and payment details for each technician.
         """
         total_payment = Technician.calculate_total_wages(self.technicians)
         payments = []
         for technician in self.technicians:
             payments.append({"name": technician.name, "amount": technician.get_wage()})
 
-        # Deduct total payment from cash balance
         self.cash_balance -= total_payment
 
         return {"total_payment": total_payment, "individual_payments": payments}
@@ -208,15 +250,14 @@ class Hatchery:
     def calculate_storage_costs(self):
         """
         Calculate storage costs for both main and auxiliary warehouses.
-        Returns detailed storage costs per resource without printing.
 
-        :return: Dictionary with total storage costs and detailed costs per resource.
+        Returns:
+            dict: Detailed costs per resource and total storage cost.
         """
         main_costs, aux_costs = self.warehouse.get_storage_costs()
 
         total_main_cost = sum(main_costs.values())
         total_aux_cost = sum(aux_costs.values())
-
         total_storage_cost = total_main_cost + total_aux_cost
 
         return {
@@ -227,13 +268,14 @@ class Hatchery:
 
     def restock_resources(self, vendor_name):
         """
-        Restocks resources in the main and auxiliary warehouses based on the given vendor and available funds.
-        Updates the hatchery's cash balance after restocking.
+        Restock resources using the selected vendor and deduct the cost from the cash balance.
 
-        :param vendor_name: Name of the selected vendor.
-        :return: Dictionary containing restock cost and updated stock levels, or bankruptcy status if funds are insufficient.
+        Args:
+            vendor_name (str): Name of the vendor to purchase resources from.
+
+        Returns:
+            dict: Contains the restock status, total cost, and updated stock levels.
         """
-        # Attempt to restock and receive the result
         restock_result = self.warehouse.restock_to_full(vendor_name, self.cash_balance)
 
         if restock_result.get("status") == "bankrupt":

@@ -4,25 +4,43 @@ from Technician import Technician
 from Warehouse import Warehouse
 from Fish import Fish
 
+"""
+Author: Mishara Sapukotanage
+Section: Data Science 
+Description: This script runs the main program for the fish hatchery simulation. It 
+manages the overall flow of the simulation, including technician management, 
+fish sales, resource handling, and cash flow. The simulation aims to run for a specified 
+number of quarters unless the hatchery goes bankrupt.
+"""
 
 def main():
-    # Initialize the Hatchery instance
+    """
+    The main function serves as the entry point for the hatchery simulation. It prompts
+    the user for inputs such as the number of quarters, manages the quarterly operations
+    including technician hiring/firing, fish sales, resource restocking, and cash balance
+    management. The simulation runs until the specified number of quarters or until
+    bankruptcy occurs.
+
+    Returns:
+        None
+    """
+    # Initialize the Hatchery instance that manages all resources and operations
     hatchery = Hatchery()
 
-    # Initialize num_quarters with None to prevent IDE warnings
+    # Initialize num_quarters to store the simulation duration
     num_quarters = None
 
-    # Prompt the user to enter the number of quarters, with proper error handling
+    # Prompt the user to enter the number of quarters to run the simulation
     while True:
         num_quarters_input = input(
             "Please enter the number of quarters (maximum: 8, default: 8 if no input is given): ").strip()
 
-        if not num_quarters_input:  # If no input is given
+        if not num_quarters_input:  # Handle case where no input is provided
             print("No input was provided.")
             while True:
                 use_default = input("Would you like to use the default of 8 quarters? (y/n): ").strip().lower()
                 if use_default == "y":
-                    num_quarters = 8
+                    num_quarters = 8  # Default simulation duration
                     print("Using the default of 8 quarters.")
                     break
                 elif use_default == "n":
@@ -31,11 +49,12 @@ def main():
                 else:
                     print("Invalid response. Please enter 'y' for yes or 'n' for no.")
             if use_default == "y":
-                break  # Exit the outer loop after using the default
+                break  # Exit the loop after setting the default
             else:
-                continue  # Reprompt for number of quarters
+                continue  # Reprompt the user for valid input
         else:
             try:
+                # Attempt to parse input as an integer and validate its range
                 num_quarters = int(num_quarters_input)
                 if 1 <= num_quarters <= 8:
                     print(f"Simulation will run for {num_quarters} quarters.")
@@ -45,18 +64,19 @@ def main():
             except ValueError:
                 print("Invalid input. Please enter a valid integer.")
 
+    # Loop through the specified number of quarters
     for quarter in range(1, num_quarters + 1):
         print(
             f"\n================================\n====== SIMULATING quarter {quarter} ======\n================================")
 
-        # Technician management
+        # Technician management: Allows hiring or firing of technicians
         while True:
             try:
                 technician_change = int(input(
                     "To add enter positive, to remove enter negative, no change enter 0.\n>>> Enter number of technicians: "))
             except ValueError:
                 print("Invalid input. Please enter a valid integer.")
-                continue  # Reprompt user if input is not an integer
+                continue  # Reprompt the user if input is not an integer
 
             current_technicians = len(hatchery.technicians)
 
@@ -66,9 +86,11 @@ def main():
                     print(f"Cannot add {technician_change} technicians. Only {max_addable} more can be added.")
                     continue
                 else:
+                    # Loop to add specified number of technicians
                     for _ in range(technician_change):
                         while True:
                             name = input(">>> Enter technician name: ").strip()
+                            # Validate the technician's name
                             if name.isdigit():
                                 print("Technician name cannot be a number. Please enter a valid name.")
                                 continue
@@ -81,7 +103,7 @@ def main():
                             else:
                                 break
 
-                        # Display fish types for specialization
+                        # Display available fish types for specialization
                         print("\nAvailable Fish Types for Specialization:")
                         print(Fish.list_fish_types())
 
@@ -101,6 +123,7 @@ def main():
                             except ValueError:
                                 print("Invalid input. Please enter a valid number.")
 
+                        # Add technician to the hatchery
                         hired = hatchery.add_technicians([(name, specialization)])
                         if hired:
                             if specialization:
@@ -116,6 +139,7 @@ def main():
                     print(f"Cannot remove {-technician_change} technicians. Only {max_removable} can be removed.")
                     continue
                 else:
+                    # Remove specified number of technicians
                     removed = hatchery.remove_technicians(abs(technician_change))
                     for name in removed:
                         print(f"Let go {name}, weekly rate={Technician.WEEKLY_WAGE} in quarter {quarter}")
@@ -128,10 +152,10 @@ def main():
             else:
                 print("Invalid input. Please try again.")
 
-        # Reset labor for the new quarter
+        # Reset labor availability for the new quarter
         hatchery.start_new_quarter()
 
-        # Fish sales management
+        # Fish sales management: Prompt user for sales quantities
         for fish_type, data in hatchery.CUSTOMER_DEMAND.items():
             demand = data["demand"]
             current_quantity = None
@@ -157,6 +181,7 @@ def main():
                         print("Invalid input. Please enter a valid integer.")
                         continue
 
+                # Attempt to sell the specified quantity of fish
                 sale_result = hatchery.sell_fish(fish_type, current_quantity)
 
                 if sale_result["status"] == "success":
@@ -190,30 +215,30 @@ def main():
                         current_quantity = retry
                         continue
 
-        # Pay technicians
+        # Pay technicians and deduct their wages
         technician_payments = hatchery.pay_technicians()
         for payment in technician_payments["individual_payments"]:
             print(f"Paid {payment['name']}, weekly rate={Technician.WEEKLY_WAGE} amount {payment['amount']}")
 
-        # Deduct fixed costs
+        # Deduct fixed costs for the quarter
         print(f"Paid rent/utilities {Hatchery.FIXED_QUARTERLY_COST}")
         hatchery.cash_balance -= Hatchery.FIXED_QUARTERLY_COST
 
-        # Calculate and deduct storage costs
+        # Calculate and deduct storage costs for warehouses
         storage_costs = hatchery.calculate_storage_costs()
         hatchery.cash_balance -= storage_costs["total_storage_cost"]
 
-        # Display storage costs
+        # Display storage costs by warehouse
         for resource, cost in storage_costs["main_costs"].items():
             print(f"Warehouse Main: {resource.capitalize()} cost {cost:.2f}")
         for resource, cost in storage_costs["aux_costs"].items():
             print(f"Warehouse Auxiliary: {resource.capitalize()} cost {cost:.2f}")
 
-        # Apply depreciation
+        # Apply depreciation to warehouse stocks
         hatchery.warehouse.calculate_depreciation()
 
-        # Vendor selection and restocking logic
-        bankrupt = False  # Flag to track bankruptcy
+        # Vendor selection and restocking
+        bankrupt = False  # Flag for bankruptcy
         while True:
             print("List of Vendors:")
             print(Supplier.list_suppliers())
@@ -256,8 +281,8 @@ def main():
         if bankrupt:
             break  # Exit the simulation loop if bankrupt
 
-        # End of quarter summary
-        if not bankrupt:  # Only display this if not bankrupt
+        # End-of-quarter summary
+        if not bankrupt:
             print(f"\n=== END OF QUARTER {quarter} ===")
             print(f"Hatchery Name: Eastaboga")
             print(f"Cash Balance: {hatchery.cash_balance:.2f}")

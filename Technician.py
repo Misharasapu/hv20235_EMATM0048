@@ -1,4 +1,22 @@
+"""
+Author: [Your Name]
+Section: [Your Section/Group]
+Description: This file contains the Technician class, which represents employees working
+at the hatchery. It includes attributes and methods for managing wages, labour,
+and specialisations of technicians.
+"""
+
 class Technician:
+    """
+    The Technician class represents employees working at the hatchery. It includes methods
+    for calculating wages, available labour, and determining specialisations.
+
+    Attributes:
+        WEEKLY_WAGE (int): Fixed weekly wage for each technician.
+        LABOUR_PER_QUARTER (int): Number of weeks of labour provided per technician each quarter.
+        MAX_TECHNICIANS (int): Maximum number of technicians allowed per quarter.
+        MIN_TECHNICIANS (int): Minimum number of technicians required per quarter.
+    """
     WEEKLY_WAGE = 500  # Fixed wage per week in pounds
     LABOUR_PER_QUARTER = 9  # Number of weeks of labour provided per quarter
     MAX_TECHNICIANS = 5  # Maximum number of technicians allowed per quarter
@@ -6,55 +24,94 @@ class Technician:
 
     def __init__(self, name, specialisation=None):
         """
-        Initialize a Technician with a name and an optional specialisation.
-        :param name: Name of the technician.
-        :param specialisation: The fish type the technician is specialised in.
+        Initialize a Technician instance with a name and an optional specialisation.
+
+        Args:
+            name (str): Name of the technician.
+            specialisation (str or None): Fish type the technician is specialised in, or None if no specialisation.
+
+        Attributes:
+            name (str): Name of the technician.
+            specialisation (str or None): Fish type the technician specialises in.
+            quarterly_wage (int): Wage for the technician for an entire quarter (12 weeks).
         """
         self.name = name
         self.specialisation = specialisation  # A single fish type or None
-        self.quarterly_wage = Technician.WEEKLY_WAGE * 12
+        self.quarterly_wage = Technician.WEEKLY_WAGE * 12  # Total quarterly wage
 
     def get_wage(self):
-        """Return the technician's wage for the quarter."""
+        """
+        Retrieve the technician's wage for the quarter.
+
+        Returns:
+            int: Quarterly wage of the technician.
+        """
         return self.quarterly_wage
 
     @classmethod
     def max_technicians(cls):
-        """Return the maximum number of technicians allowed per quarter."""
+        """
+        Retrieve the maximum number of technicians allowed per quarter.
+
+        Returns:
+            int: Maximum number of technicians.
+        """
         return cls.MAX_TECHNICIANS
 
     @classmethod
     def get_quarterly_labour(cls):
-        """Return the total labor each technician provides per quarter in days (9 weeks)."""
+        """
+        Retrieve the total labour provided by a single technician in a quarter.
+
+        Returns:
+            int: Total labour in weeks (9 weeks per technician per quarter).
+        """
         return cls.LABOUR_PER_QUARTER
 
     @classmethod
     def calculate_total_labour(cls, num_technicians):
         """
-        Calculate total labor available per quarter based on the number of technicians.
-        :param num_technicians: Number of technicians.
-        :return: Total labor in days.
+        Calculate the total labour available for a given number of technicians.
+
+        Args:
+            num_technicians (int): Number of technicians employed.
+
+        Returns:
+            int: Total labour in weeks for all technicians in the quarter.
         """
         return num_technicians * cls.get_quarterly_labour()
 
     @classmethod
     def calculate_total_wages(cls, technicians):
         """
-        Calculate the total wages for a list of technicians.
-        :param technicians: List of Technician instances.
-        :return: Total wages for the quarter.
+        Calculate the total wages for a list of technicians for a quarter.
+
+        Args:
+            technicians (list of Technician): List of Technician instances.
+
+        Returns:
+            int: Total wages for all technicians in the list.
         """
         return sum(technician.get_wage() for technician in technicians)
 
     def is_specialised_for(self, fish_type):
         """
-        Check if the technician is specialised for a specific fish type.
-        :param fish_type: Name of the fish type.
-        :return: True if the technician is specialised for the given fish type, False otherwise.
+        Check if the technician is specialised in maintaining or selling a specific fish type.
+
+        Args:
+            fish_type (str): Name of the fish type to check.
+
+        Returns:
+            bool: True if the technician is specialised for the given fish type, False otherwise.
         """
         return self.specialisation == fish_type
 
     def __str__(self):
-        """Return a formatted string for displaying technician details."""
+        """
+        Provide a formatted string representation of the technician's details.
+
+        Returns:
+            str: A string containing the technician's name, weekly rate, and specialisation.
+        """
         specialisation = self.specialisation or "None"
         return f"Technician {self.name}, weekly rate={Technician.WEEKLY_WAGE}, specialisation={specialisation}"

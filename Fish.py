@@ -1,5 +1,21 @@
+"""
+Author: [Your Name]
+Section: [Your Section/Group]
+Description: This file contains the Fish class, which provides static data and
+methods to manage fish-related operations, including resource calculation,
+maintenance time determination, and listing fish types.
+"""
 
 class Fish:
+    """
+    The Fish class manages all information related to the fish species available
+    in the hatchery. It provides methods to calculate resource requirements,
+    maintenance times, and display fish details.
+
+    Attributes:
+        FISH_DATA (dict): Static dictionary containing data for each fish type,
+        including resource requirements and maintenance time.
+    """
     # Dictionary holding data for each fish type
     FISH_DATA = {
         "Clef Fins": {
@@ -42,7 +58,16 @@ class Fish:
 
     @classmethod
     def get_fish_info(cls, fish_type):
-        """Retrieve information for a specific fish type."""
+        """
+        Retrieve detailed information for a specific fish type.
+
+        Args:
+            fish_type (str): Name of the fish species (e.g., "Clef Fins").
+
+        Returns:
+            dict or str: A dictionary containing resource requirements and
+            maintenance time if the fish type exists, or an error message if not found.
+        """
         if fish_type in cls.FISH_DATA:
             return cls.FISH_DATA[fish_type]
         else:
@@ -50,18 +75,23 @@ class Fish:
 
     @classmethod
     def display_all_fish(cls):
-        """Display all fish types and their details."""
+        """
+        Print details of all available fish types and their resource requirements.
+        """
         for fish, data in cls.FISH_DATA.items():
             print(f"Fish Type: {fish}, Details: {data}")
 
     @classmethod
     def calculate_resource_needs(cls, fish_type, quantity):
         """
-        Calculate total resources needed based on the quantity of fish.
+        Calculate the total amount of resources needed for a specified quantity of fish.
 
-        :param fish_type: Type of fish (e.g., 'Clef Fins')
-        :param quantity: Number of fish being managed or sold.
-        :return: Dictionary with required amounts for fertiliser, feed, and salt.
+        Args:
+            fish_type (str): Type of fish (e.g., "Clef Fins").
+            quantity (int): Number of fish to calculate resources for.
+
+        Returns:
+            dict: A dictionary with total amounts of fertilizer, feed, and salt required.
         """
         if fish_type in cls.FISH_DATA:
             requirements = cls.FISH_DATA[fish_type]
@@ -75,10 +105,14 @@ class Fish:
     @classmethod
     def get_maintenance_time(cls, fish_type):
         """
-        Retrieve the maintenance time in weeks for this fish type.
+        Retrieve the maintenance time in weeks for a specific fish type.
 
-        :param fish_type: Type of fish (e.g., 'Clef Fins')
-        :return: Maintenance time in weeks for the given fish type.
+        Args:
+            fish_type (str): Type of fish (e.g., "Clef Fins").
+
+        Returns:
+            float: Maintenance time in weeks for the given fish type. Returns 0
+            if the fish type is not found.
         """
         maintenance_time_days = cls.FISH_DATA.get(fish_type, {}).get("maintenance_time", 0)
         # Convert days to weeks (assuming a 5-day work week)
@@ -88,11 +122,14 @@ class Fish:
     @classmethod
     def calculate_total_maintenance_time(cls, fish_type, quantity):
         """
-        Calculate the total maintenance time in weeks required based on the quantity of fish.
+        Calculate the total maintenance time in weeks required for a given quantity of fish.
 
-        :param fish_type: Type of fish (e.g., 'Clef Fins')
-        :param quantity: Number of fish being managed or sold.
-        :return: Total maintenance time in weeks required for the given quantity of fish.
+        Args:
+            fish_type (str): Type of fish (e.g., "Clef Fins").
+            quantity (int): Number of fish to calculate maintenance time for.
+
+        Returns:
+            float: Total maintenance time in weeks required.
         """
         maintenance_time_per_fish = cls.get_maintenance_time(fish_type)
         return maintenance_time_per_fish * quantity
@@ -100,15 +137,12 @@ class Fish:
     @classmethod
     def list_fish_types(cls):
         """
-        List all available fish types with indices for selection in the console.
-        :return: A formatted string listing fish types by index.
+        Generate a formatted list of all available fish types with indices for console selection.
+
+        Returns:
+            str: A formatted string listing fish types with their indices.
         """
         fish_list = []
         for index, fish_type in enumerate(cls.FISH_DATA.keys(), start=1):
             fish_list.append(f"{index}. {fish_type}")
         return "\n".join(fish_list)
-
-
-
-
-
