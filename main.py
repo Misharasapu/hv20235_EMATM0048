@@ -28,8 +28,12 @@ def main():
         technician_change = int(input(
             "To add enter positive, to remove enter negative, no change enter 0.\n>>> Enter number of technicians: "))
         if technician_change > 0:
-            technician_names = [input(f">>> Enter technician name: ") for _ in range(technician_change)]
-            hired = hatchery.add_technicians(technician_names)
+            technician_details = []
+            for _ in range(technician_change):
+                name = input(">>> Enter technician name: ")
+                specialization = input(">>> Enter specialization (leave blank for none): ").strip() or None
+                technician_details.append((name, specialization))
+            hired = hatchery.add_technicians(technician_details)
             for name in hired:
                 print(f"Hired {name}, weekly rate={Technician.WEEKLY_WAGE} in quarter {quarter}")
         elif technician_change < 0:
@@ -51,7 +55,12 @@ def main():
             while True:
                 # Prompt user for sell quantity only if not retrying
                 if current_quantity is None:
-                    current_quantity = int(input(f"Fish {fish_type}, demand {demand}, sell {demand}: "))
+                    try:
+                        current_quantity = int(
+                            input(f"Fish {fish_type}, demand {demand}, sell (default: {demand}): ") or demand)
+                    except ValueError:
+                        print("Invalid input. Please enter a valid integer.")
+                        continue
 
                 sale_result = hatchery.sell_fish(fish_type, current_quantity)
 
@@ -62,6 +71,11 @@ def main():
                         f"DEBUG: Sold {sale_result['sell_quantity']} of {fish_type} for revenue {sale_result['revenue']}.")
                     print(f"DEBUG: Updated Cash Balance: {hatchery.cash_balance}")
                     break  # Exit loop on successful sale
+
+                elif sale_result["status"] == "skipped":
+                    # Handle skipped fish type
+                    print(f"Skipping sale of {fish_type}.")
+                    break  # Exit loop on skipped status
 
                 elif sale_result["status"] in ["insufficient_labor", "insufficient_resources",
                                                "insufficient_labor_and_resources"]:
@@ -75,7 +89,12 @@ def main():
                             print(f"   {resource} need {info['needed']}, storage {info['available']}")
 
                     # Prompt user for retry
-                    retry = int(input(f"Enter a new quantity for {fish_type} or 0 to skip: "))
+                    try:
+                        retry = int(input(f"Enter a new quantity for {fish_type} or 0 to skip: "))
+                    except ValueError:
+                        print("Invalid input. Please enter a valid integer.")
+                        continue
+
                     if retry == 0:
                         print(f"Skipping sale of {fish_type}.")
                         break  # Skip this fish type

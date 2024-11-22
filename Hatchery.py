@@ -55,18 +55,18 @@ class Hatchery:
         """
         return self.cash_balance
 
-    def add_technicians(self, technician_names):
+    def add_technicians(self, technician_details):
         """
-        Add new technicians to the hatchery based on provided names list.
+        Add new technicians to the hatchery based on provided details.
         Ensures total number of technicians does not exceed the maximum limit.
 
-        :param technician_names: List of names for technicians to be added.
+        :param technician_details: List of tuples with technician names and optional specializations.
         :return: List of successfully added technician names.
         """
         hired_technicians = []
-        for name in technician_names:
+        for name, specialization in technician_details:
             if len(self.technicians) < Technician.MAX_TECHNICIANS:
-                new_technician = Technician(name)
+                new_technician = Technician(name, specialization)
                 self.technicians.append(new_technician)
                 hired_technicians.append(name)
             else:
