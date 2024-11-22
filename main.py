@@ -294,6 +294,7 @@ def main():
             print("Technicians:")
             for technician in hatchery.technicians:
                 print(f"  Technician {technician.name}, weekly rate={Technician.WEEKLY_WAGE}")
+            print(f"\n--- END OF QUARTER {quarter} ---\n")
 
     print("\nSimulation completed.")
 
