@@ -100,7 +100,6 @@ class Warehouse:
         for resource in self.main_stock:
             # Retrieve the supplier-specific price per unit of the resource
             price_per_unit = Supplier.get_price(supplier_name, resource)
-            print(f"Price per unit for {resource} from {supplier_name}: {price_per_unit}")  # Debug print
 
             if price_per_unit is None:
                 continue  # Skip if the supplier does not provide a price for this resource
@@ -108,14 +107,10 @@ class Warehouse:
             # Calculate the amounts needed to restock
             main_restock_amount = Warehouse.CAPACITIES[resource]["main"] - self.main_stock[resource]
             aux_restock_amount = Warehouse.CAPACITIES[resource]["aux"] - self.aux_stock[resource]
-            print(f"Main restock amount for {resource}: {main_restock_amount}")  # Debug print
-            print(f"Auxiliary restock amount for {resource}: {aux_restock_amount}")  # Debug print
 
             # Calculate the cost to fully restock main and auxiliary warehouses for this resource
             cost_main = price_per_unit * main_restock_amount
             cost_aux = price_per_unit * aux_restock_amount
-            print(f"Cost to restock main for {resource}: {cost_main}")  # Debug print
-            print(f"Cost to restock auxiliary for {resource}: {cost_aux}")  # Debug print
 
             # Attempt to restock the main warehouse first
             if available_cash >= cost_main:

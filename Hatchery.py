@@ -1,4 +1,3 @@
-
 from Technician import Technician
 from Warehouse import Warehouse
 from Fish import Fish
@@ -26,7 +25,6 @@ class Hatchery:
     def start_new_quarter(self):
         """Reset available labor based on the number of technicians at the start of each quarter."""
         self.available_labor = Technician.calculate_total_labour(len(self.technicians))
-        print(f"Starting new quarter with {self.available_labor} weeks of available labor.")
 
     @classmethod
     def get_demand_and_price(cls, fish_type):
@@ -108,14 +106,12 @@ class Hatchery:
 
         # Exit early if sell_quantity is 0 to skip this fish type without errors
         if requested_quantity == 0:
-            print(f"DEBUG: Skipping sale of {fish_type} as requested quantity is 0.")
             return {"status": "skipped", "fish_type": fish_type}
 
         sell_quantity = min(requested_quantity, demand)
 
         # Calculate total maintenance time for the requested sale
         base_maintenance_time = Fish.calculate_total_maintenance_time(fish_type, sell_quantity)
-        print(f"DEBUG: Base maintenance time for {sell_quantity} of {fish_type}: {base_maintenance_time:.2f} weeks")
 
         # Split technicians into specialized and regular groups
         specialized_technicians = [
@@ -125,43 +121,25 @@ class Hatchery:
             technician for technician in self.technicians if not technician.is_specialised_for(fish_type)
         ]
 
-        print(f"DEBUG: Specialized technicians for {fish_type}: {[tech.name for tech in specialized_technicians]}")
-        print(f"DEBUG: Regular technicians: {[tech.name for tech in regular_technicians]}")
-
         # Calculate how much specialized labor can handle
         specialized_labor_available = len(specialized_technicians) * Technician.LABOUR_PER_QUARTER
-        # Calculate the maximum quantity specialized labor can handle
         equivalent_specialized_time = specialized_labor_available * (3 / 2)  # Convert specialized labor to equivalent time
         max_specialized_quantity = equivalent_specialized_time / (base_maintenance_time / sell_quantity)
-
-        print(f"DEBUG: Specialized labor available: {specialized_labor_available:.2f} weeks")
-        print(f"DEBUG: Maximum quantity specialized labor can handle: {max_specialized_quantity:.2f} fish")
 
         if max_specialized_quantity >= sell_quantity:
             # Specialized technicians can handle the entire sale
             actual_maintenance_time = base_maintenance_time * (2 / 3)
-            print(
-                f"DEBUG: Entire sale handled by specialized technicians. Maintenance time: {actual_maintenance_time:.2f} weeks")
         else:
             # Specialized technicians handle part of the sale
             specialized_maintenance_time = max_specialized_quantity * (base_maintenance_time / sell_quantity) * (2 / 3)
             remaining_quantity = sell_quantity - max_specialized_quantity
             regular_maintenance_time = remaining_quantity * (base_maintenance_time / sell_quantity)
             actual_maintenance_time = specialized_maintenance_time + regular_maintenance_time
-            print(
-                f"DEBUG: Specialized technicians handled {max_specialized_quantity:.2f} fish. Maintenance time: {specialized_maintenance_time:.2f} weeks")
-            print(
-                f"DEBUG: Regular technicians handled {remaining_quantity:.2f} fish. Maintenance time: {regular_maintenance_time:.2f} weeks")
-            print(f"DEBUG: Total maintenance time: {actual_maintenance_time:.2f} weeks")
 
         # Check labor constraint
         labor_issue = self.available_labor < actual_maintenance_time
-        print(f"DEBUG: Available labor: {self.available_labor:.2f} weeks")
-        if labor_issue:
-            print(
-                f"DEBUG: Insufficient labor. Required: {actual_maintenance_time:.2f} weeks, Available: {self.available_labor:.2f} weeks")
 
-        # Resource check and deduction (unchanged logic)
+        # Resource check and deduction
         resource_needs = Fish.calculate_resource_needs(fish_type, sell_quantity)
         insufficient_resources = {}
         for resource, amount_needed in resource_needs.items():
@@ -194,8 +172,6 @@ class Hatchery:
 
         # Deduct labor
         self.available_labor -= actual_maintenance_time
-        print(
-            f"DEBUG: Deducted {actual_maintenance_time:.2f} weeks of labor. Remaining labor: {self.available_labor:.2f} weeks")
 
         # Deduct resources
         for resource, amount_needed in resource_needs.items():
@@ -204,8 +180,6 @@ class Hatchery:
         # Calculate revenue and update cash balance
         revenue = sell_quantity * price
         self.cash_balance += revenue
-        print(
-            f"DEBUG: Sold {sell_quantity} of {fish_type} for revenue: £{revenue}. Updated cash balance: £{self.cash_balance}")
 
         return {
             "status": "success",
@@ -240,14 +214,8 @@ class Hatchery:
         """
         main_costs, aux_costs = self.warehouse.get_storage_costs()
 
-        # Calculate total storage costs using traditional loops
-        total_main_cost = 0
-        for cost in main_costs.values():
-            total_main_cost += cost
-
-        total_aux_cost = 0
-        for cost in aux_costs.values():
-            total_aux_cost += cost
+        total_main_cost = sum(main_costs.values())
+        total_aux_cost = sum(aux_costs.values())
 
         total_storage_cost = total_main_cost + total_aux_cost
 
@@ -268,9 +236,7 @@ class Hatchery:
         # Attempt to restock and receive the result
         restock_result = self.warehouse.restock_to_full(vendor_name, self.cash_balance)
 
-        # Check if restocking was successful or led to bankruptcy
         if restock_result.get("status") == "bankrupt":
-            # Update cash balance to reflect bankruptcy status
             self.cash_balance = restock_result["available_cash"]
             return {
                 "status": "bankrupt",
@@ -280,7 +246,6 @@ class Hatchery:
                 "available_cash": self.cash_balance
             }
         else:
-            # Deduct total restock cost from cash balance
             total_restock_cost = restock_result["total_cost"]
             self.cash_balance -= total_restock_cost
             return {
@@ -290,48 +255,3 @@ class Hatchery:
                 "main_stock": self.warehouse.main_stock,
                 "aux_stock": self.warehouse.aux_stock
             }
-
-    def end_of_quarter_summary(self, supplier_name):
-        """
-        Calculates and deducts end-of-quarter expenses, including fixed costs, technician wages,
-        warehouse storage costs, and restocking costs. Updates the hatchery's cash balance accordingly
-        and returns a detailed summary of all expenses.
-
-        :param supplier_name: Name of the selected supplier for restocking costs.
-        :return: Dictionary containing a detailed breakdown of expenses, total expenses, and remaining cash balance.
-        """
-        # Retrieve fixed quarterly cost directly from the class attribute
-        fixed_costs = self.FIXED_QUARTERLY_COST
-
-        # Calculate technician wages using existing pay_technicians method
-        technician_payments = self.pay_technicians()
-        technician_wages = technician_payments["total_payment"]
-
-        # Calculate storage costs using the calculate_storage_costs method
-        storage_cost_data = self.calculate_storage_costs()
-        storage_costs = storage_cost_data["total_storage_cost"]
-
-        # Perform restocking using the restock_to_full method
-        restocking_data = self.warehouse.restock_to_full(supplier_name, self.cash_balance)
-        restocking_costs = restocking_data["total_cost"]
-
-        # Total expenses for the quarter
-        total_expenses = fixed_costs + technician_wages + storage_costs + restocking_costs
-
-        # Deduct total expenses from cash balance
-        self.cash_balance -= total_expenses
-
-        # Return a summary dictionary with detailed expenses
-        return {
-            "fixed_costs": fixed_costs,
-            "technician_wages": technician_wages,
-            "storage_costs": storage_costs,
-            "restocking_costs": restocking_costs,
-            "total_expenses": total_expenses,
-            "remaining_cash_balance": self.cash_balance
-        }
-
-
-
-
-
