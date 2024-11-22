@@ -101,15 +101,24 @@ class Hatchery:
         price = demand_data["price"]
         sell_quantity = min(requested_quantity, demand)
 
-        # Calculate maintenance time for the requested sale
-        maintenance_time = Fish.calculate_total_maintenance_time(fish_type, sell_quantity)
+        # Calculate base maintenance time for the requested sale
+        base_maintenance_time = Fish.calculate_total_maintenance_time(fish_type, sell_quantity)
 
-        # Check labor constraint
-        labor_issue = self.available_labor < maintenance_time
-        insufficient_resources = {}
+        # Adjust maintenance time if a specialised technician exists
+        specialised_technician_exists = any(
+            technician.is_specialised_for(fish_type) for technician in self.technicians
+        )
+        if specialised_technician_exists:
+            adjusted_maintenance_time = base_maintenance_time * (2 / 3)
+        else:
+            adjusted_maintenance_time = base_maintenance_time
 
-        # Resource check and deduction
+        # Check labor constraint using adjusted maintenance time
+        labor_issue = self.available_labor < adjusted_maintenance_time
+
+        # Resource check and deduction (unchanged logic)
         resource_needs = Fish.calculate_resource_needs(fish_type, sell_quantity)
+        insufficient_resources = {}
         for resource, amount_needed in resource_needs.items():
             available_amount = self.warehouse.main_stock.get(resource, 0) + self.warehouse.aux_stock.get(resource, 0)
             if available_amount < amount_needed:
@@ -118,34 +127,33 @@ class Hatchery:
                     "available": available_amount
                 }
 
-        # Determine return status based on labor and resources
+        # Determine return status based on labor and resources (unchanged logic)
         if labor_issue and insufficient_resources:
-            # Both labor and resources are insufficient
             return {
                 "status": "insufficient_labor_and_resources",
-                "required_labor": maintenance_time,
+                "required_labor": adjusted_maintenance_time,
                 "available_labor": self.available_labor,
                 "resources": insufficient_resources
             }
         elif labor_issue:
-            # Only labor is insufficient
             return {
                 "status": "insufficient_labor",
-                "required_labor": maintenance_time,
+                "required_labor": adjusted_maintenance_time,
                 "available_labor": self.available_labor
             }
         elif insufficient_resources:
-            # Only resources are insufficient
             return {
                 "status": "insufficient_resources",
                 "resources": insufficient_resources
             }
 
-        # Deduct labor and resources if both are sufficient
-        self.available_labor -= maintenance_time
+        # Deduct labor using adjusted maintenance time
+        self.available_labor -= adjusted_maintenance_time
         print(
-            f"Deducted {maintenance_time} weeks of labor for {sell_quantity} of {fish_type}. Remaining labor: {self.available_labor}")
+            f"Deducted {adjusted_maintenance_time:.2f} weeks of labor for {sell_quantity} of {fish_type}. Remaining labor: {self.available_labor:.2f}"
+        )
 
+        # Deduct resources
         for resource, amount_needed in resource_needs.items():
             self.warehouse.check_and_deduct_resources(resource, amount_needed)
 

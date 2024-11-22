@@ -1,40 +1,45 @@
 from Hatchery import Hatchery
+from Technician import Technician
+from Fish import Fish
 
-# Initialize Hatchery instance
-hatchery = Hatchery()
+def test_specialised_technician_impact():
+    # Set up the Hatchery
+    hatchery = Hatchery()
+    hatchery.available_labor = 18  # Set available labour for the quarter
 
-# Simulate adding technicians
-hatchery.add_technicians(["Alice", "Bob"])
-print(f"Technicians hired: {[tech.name for tech in hatchery.technicians]}")
+    # Add technicians (1 specialised in Clef Fins, 1 regular)
+    hatchery.technicians = [
+        Technician(name="Specialist", specialisation="Modal Bass"),  # Specialised technician
+        Technician(name="Regular", specialisation=None),           # Regular technician
+    ]
 
-# Simulate a quarter's labor and sales
-hatchery.start_new_quarter()
-hatchery.sell_fish("Clef Fins", 10)  # Example sale
-hatchery.sell_fish("Timpani Snapper", 5)  # Example sale
+    # Define test parameters
+    fish_type = "Modal Bass"
+    requested_quantity = 30  # Request to sell 10 units of Clef Fins
 
-# Apply depreciation to warehouse stocks
-print("\nApplying depreciation to the warehouse...")
-hatchery.warehouse.calculate_depreciation()
+    # Calculate expected values
+    base_maintenance_time = Fish.calculate_total_maintenance_time(fish_type, requested_quantity)
+    adjusted_maintenance_time = base_maintenance_time * (2 / 3)  # Due to the specialised technician
+    expected_remaining_labour = hatchery.available_labor - adjusted_maintenance_time
 
-# Call end_of_quarter_summary and test it
-supplier_name = "Slippery Lakes"  # Example supplier
-summary = hatchery.end_of_quarter_summary(supplier_name)
+    # Call the sell_fish method
+    result = hatchery.sell_fish(fish_type, requested_quantity)
 
-# Display the returned summary
-print("\n=== End of Quarter Summary ===")
-print(f"Fixed Costs: {summary['fixed_costs']}")
-print(f"Technician Wages: {summary['technician_wages']}")
-print(f"Storage Costs: {summary['storage_costs']}")
-print(f"Restocking Costs: {summary['restocking_costs']}")
-print(f"Total Expenses: {summary['total_expenses']}")
-print(f"Remaining Cash Balance: {summary['remaining_cash_balance']:.2f}")
+    # Print test results
+    print("\n=== Test Results ===")
+    print(f"Fish Type: {fish_type}")
+    print(f"Requested Quantity: {requested_quantity}")
+    print(f"Base Maintenance Time: {base_maintenance_time}")
+    print(f"Adjusted Maintenance Time (Specialised Technician): {adjusted_maintenance_time}")
+    print(f"Initial Labour: 18")
+    print(f"Remaining Labour After Deduction: {hatchery.available_labor}")
+    print(f"Sell Fish Result: {result}")
 
-# Verify the results manually or via assertions
-expected_cash_balance = 10000 - (
-    summary["fixed_costs"]
-    + summary["technician_wages"]
-    + summary["storage_costs"]
-    + summary["restocking_costs"]
-)
-assert abs(summary["remaining_cash_balance"] - expected_cash_balance) < 0.01, "Cash balance calculation error"
-print("\nTest Passed: End-of-quarter summary calculations are correct.")
+    # Assertions
+    assert result["status"] == "success", "Failed: Sale should be successful."
+    assert round(hatchery.available_labor, 2) == round(expected_remaining_labour, 2), \
+        "Failed: Labour deduction with specialised technicians is incorrect."
+
+# Run the test
+if __name__ == "__main__":
+    test_specialised_technician_impact()

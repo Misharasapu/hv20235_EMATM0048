@@ -4,14 +4,14 @@ class Technician:
     MAX_TECHNICIANS = 5  # Maximum number of technicians allowed per quarter
     MIN_TECHNICIANS = 1  # Minimum number of technicians required per quarter
 
-    def __init__(self, name, specialisations=None):
+    def __init__(self, name, specialisation=None):
         """
-        Initialize a Technician with a name and optional specialisations.
+        Initialize a Technician with a name and an optional specialisation.
         :param name: Name of the technician.
-        :param specialisations: List of fish types the technician is specialised in.
+        :param specialisation: The fish type the technician is specialised in.
         """
         self.name = name
-        self.specialisations = specialisations or []  # Default to an empty list if none provided
+        self.specialisation = specialisation  # A single fish type or None
         self.quarterly_wage = Technician.WEEKLY_WAGE * 12
 
     def get_wage(self):
@@ -50,11 +50,11 @@ class Technician:
         """
         Check if the technician is specialised for a specific fish type.
         :param fish_type: Name of the fish type.
-        :return: True if the technician is specialised, False otherwise.
+        :return: True if the technician is specialised for the given fish type, False otherwise.
         """
-        return fish_type in self.specialisations
+        return self.specialisation == fish_type
 
     def __str__(self):
         """Return a formatted string for displaying technician details."""
-        specialisations = ", ".join(self.specialisations) or "None"
-        return f"Technician {self.name}, weekly rate={Technician.WEEKLY_WAGE}, specialisations={specialisations}"
+        specialisation = self.specialisation or "None"
+        return f"Technician {self.name}, weekly rate={Technician.WEEKLY_WAGE}, specialisation={specialisation}"
