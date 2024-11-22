@@ -41,15 +41,43 @@ def main():
                     print(f"Cannot add {technician_change} technicians. Only {max_addable} more can be added.")
                     continue  # Reprompt the user
                 else:
-                    technician_details = []
                     for _ in range(technician_change):
-                        name = input(">>> Enter technician name: ")
-                        specialization = input(">>> Enter specialization (leave blank for none): ").strip() or None
-                        technician_details.append((name, specialization))
-                    hired = hatchery.add_technicians(technician_details)
-                    for name in hired:
-                        print(f"Hired {name}, weekly rate={Technician.WEEKLY_WAGE} in quarter {quarter}")
+                        while True:
+                            name = input(">>> Enter technician name: ").strip()
+                            if name:  # Check if input is not empty
+                                break  # Exit the loop if a valid name is provided
+                            print("No valid input given. Please enter a valid name.")
+
+                        # Display fish types for specialization
+                        print("\nAvailable Fish Types for Specialization:")
+                        print(Fish.list_fish_types())
+
+                        while True:
+                            try:
+                                specialization_choice = int(
+                                    input(">>> Enter the number of the fish type to specialize in (0 for none): ")) - 1
+                                if specialization_choice == -1:  # User chose '0' for no specialization
+                                    specialization = None
+                                    break
+                                fish_types = list(Hatchery.CUSTOMER_DEMAND.keys())
+                                if 0 <= specialization_choice < len(fish_types):
+                                    specialization = fish_types[specialization_choice]
+                                    break
+                                else:
+                                    print(f"Invalid choice. Please select a number between 1 and {len(fish_types)}.")
+                            except ValueError:
+                                print("Invalid input. Please enter a valid number.")
+
+                        # Add the technician immediately after getting their details
+                        hired = hatchery.add_technicians([(name, specialization)])
+                        if hired:  # If hiring was successful
+                            if specialization:  # Check if a specialization is provided
+                                print(
+                                    f"Hired {name}, weekly rate={Technician.WEEKLY_WAGE}, specialization={specialization} in quarter {quarter}")
+                            else:
+                                print(f"Hired {name}, weekly rate={Technician.WEEKLY_WAGE} in quarter {quarter}")
                     break  # Exit the loop after successful addition
+
 
             elif technician_change < 0:  # Removing technicians
                 max_removable = current_technicians - Technician.MIN_TECHNICIANS

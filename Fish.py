@@ -1,5 +1,4 @@
 
-
 class Fish:
     # Dictionary holding data for each fish type
     FISH_DATA = {
@@ -97,6 +96,19 @@ class Fish:
         """
         maintenance_time_per_fish = cls.get_maintenance_time(fish_type)
         return maintenance_time_per_fish * quantity
+
+    @classmethod
+    def list_fish_types(cls):
+        """
+        List all available fish types with indices for selection in the console.
+        :return: A formatted string listing fish types by index.
+        """
+        fish_list = []
+        for index, fish_type in enumerate(cls.FISH_DATA.keys(), start=1):
+            fish_list.append(f"{index}. {fish_type}")
+        return "\n".join(fish_list)
+
+
 
 
 
