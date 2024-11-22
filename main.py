@@ -12,13 +12,41 @@ def main():
     # Debug: Initial cash balance
     print(f"DEBUG: Initial Cash Balance: {hatchery.cash_balance}")
 
-    # Prompt the user to enter the number of quarters, defaulting to 8 if no input is given
-    num_quarters_input = input("Please enter number of quarters (default: 8): ")
-    if num_quarters_input.strip() == "":
-        num_quarters = 8  # Default to 8 if input is empty
-    else:
-        num_quarters = min(int(num_quarters_input), 8)  # Cap the number of quarters at 8
+    # Initialize num_quarters with None to prevent IDE warnings
+    num_quarters = None
 
+    # Prompt the user to enter the number of quarters, with proper error handling
+    while True:
+        num_quarters_input = input(
+            "Please enter the number of quarters (maximum: 8, default: 8 if no input is given): ").strip()
+
+        if not num_quarters_input:  # If no input is given
+            print("No input was provided.")
+            while True:
+                use_default = input("Would you like to use the default of 8 quarters? (y/n): ").strip().lower()
+                if use_default == "y":
+                    num_quarters = 8
+                    print("Using the default of 8 quarters.")
+                    break
+                elif use_default == "n":
+                    print("Please enter a valid number of quarters.")
+                    break
+                else:
+                    print("Invalid response. Please enter 'y' for yes or 'n' for no.")
+            if use_default == "y":
+                break  # Exit the outer loop after using the default
+            else:
+                continue  # Reprompt for number of quarters
+        else:
+            try:
+                num_quarters = int(num_quarters_input)
+                if 1 <= num_quarters <= 8:
+                    print(f"Simulation will run for {num_quarters} quarters.")
+                    break
+                else:
+                    print("Invalid number. Please enter a value between 1 and 8.")
+            except ValueError:
+                print("Invalid input. Please enter a valid integer.")
 
     for quarter in range(1, num_quarters + 1):
         print(
