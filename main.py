@@ -24,22 +24,50 @@ def main():
         print(
             f"\n================================\n====== SIMULATING quarter {quarter} ======\n================================")
 
-        # Prompt for technician management
-        technician_change = int(input(
-            "To add enter positive, to remove enter negative, no change enter 0.\n>>> Enter number of technicians: "))
-        if technician_change > 0:
-            technician_details = []
-            for _ in range(technician_change):
-                name = input(">>> Enter technician name: ")
-                specialization = input(">>> Enter specialization (leave blank for none): ").strip() or None
-                technician_details.append((name, specialization))
-            hired = hatchery.add_technicians(technician_details)
-            for name in hired:
-                print(f"Hired {name}, weekly rate={Technician.WEEKLY_WAGE} in quarter {quarter}")
-        elif technician_change < 0:
-            removed = hatchery.remove_technicians(abs(technician_change))
-            for name in removed:
-                print(f"Let go {name}, weekly rate={Technician.WEEKLY_WAGE} in quarter {quarter}")
+        while True:
+            # Prompt for technician management
+            try:
+                technician_change = int(input(
+                    "To add enter positive, to remove enter negative, no change enter 0.\n>>> Enter number of technicians: "))
+            except ValueError:
+                print("Invalid input. Please enter a valid integer.")
+                continue  # Reprompt user if input is not an integer
+
+            current_technicians = len(hatchery.technicians)
+
+            if technician_change > 0:  # Adding technicians
+                max_addable = Technician.MAX_TECHNICIANS - current_technicians
+                if technician_change > max_addable:
+                    print(f"Cannot add {technician_change} technicians. Only {max_addable} more can be added.")
+                    continue  # Reprompt the user
+                else:
+                    technician_details = []
+                    for _ in range(technician_change):
+                        name = input(">>> Enter technician name: ")
+                        specialization = input(">>> Enter specialization (leave blank for none): ").strip() or None
+                        technician_details.append((name, specialization))
+                    hired = hatchery.add_technicians(technician_details)
+                    for name in hired:
+                        print(f"Hired {name}, weekly rate={Technician.WEEKLY_WAGE} in quarter {quarter}")
+                    break  # Exit the loop after successful addition
+
+            elif technician_change < 0:  # Removing technicians
+                max_removable = current_technicians - Technician.MIN_TECHNICIANS
+                if abs(technician_change) > max_removable:
+                    print(f"Cannot remove {-technician_change} technicians. Only {max_removable} can be removed.")
+                    continue  # Reprompt the user
+                else:
+                    removed = hatchery.remove_technicians(abs(technician_change))
+                    for name in removed:
+                        print(f"Let go {name}, weekly rate={Technician.WEEKLY_WAGE} in quarter {quarter}")
+                    break  # Exit the loop after successful removal
+
+            elif technician_change == 0:
+                print("No change in technician count.")
+                break  # Exit the loop if no change
+
+            else:
+                print("Invalid input. Please try again.")
 
         # Reset labor for the new quarter
         hatchery.start_new_quarter()
