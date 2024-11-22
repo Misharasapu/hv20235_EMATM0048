@@ -72,9 +72,18 @@ def main():
                     for _ in range(technician_change):
                         while True:
                             name = input(">>> Enter technician name: ").strip()
-                            if name:  # Check if input is not empty
-                                break  # Exit the loop if a valid name is provided
-                            print("No valid input given. Please enter a valid name.")
+                            if name.isdigit():  # Check if the input is purely numeric
+                                print("Technician name cannot be a number. Please enter a valid name.")
+                                continue
+                            elif not name:  # Check if input is empty
+                                print("No valid input given. Please enter a valid name.")
+                                continue
+                            elif any(tech.name == name for tech in hatchery.technicians):  # Check for duplicate names
+                                print(
+                                    f"A technician with the name '{name}' already exists. Please choose a different name.")
+                                continue
+                            else:
+                                break  # Exit the loop if a valid and unique name is provided
 
                         # Display fish types for specialization
                         print("\nAvailable Fish Types for Specialization:")
@@ -105,7 +114,6 @@ def main():
                             else:
                                 print(f"Hired {name}, weekly rate={Technician.WEEKLY_WAGE} in quarter {quarter}")
                     break  # Exit the loop after successful addition
-
 
             elif technician_change < 0:  # Removing technicians
                 max_removable = current_technicians - Technician.MIN_TECHNICIANS
@@ -140,8 +148,20 @@ def main():
                 # Prompt user for sell quantity only if not retrying
                 if current_quantity is None:
                     try:
-                        current_quantity = int(
-                            input(f"Fish {fish_type}, demand {demand}, sell (default: {demand}): ") or demand)
+                        user_input = input(f"Fish {fish_type}, demand {demand}, sell (default: {demand}): ").strip()
+                        if not user_input:  # Handle no input
+                            print("No input provided. Please enter a valid quantity.")
+                            continue  # Reprompt the user
+                        else:
+                            current_quantity = int(user_input)
+                            if current_quantity < 0:
+                                print("You cannot sell a negative quantity. Please enter a positive integer.")
+                                current_quantity = None  # Reset to reprompt the user
+                                continue
+                            if current_quantity > demand:
+                                print(f"Cannot sell more than the demand ({demand}). Please enter a valid quantity.")
+                                current_quantity = None  # Reset to reprompt the user
+                                continue
                     except ValueError:
                         print("Invalid input. Please enter a valid integer.")
                         continue
@@ -223,54 +243,61 @@ def main():
             print(f"Warehouse Auxiliary: {resource.capitalize()}, {amount}")
 
         # Display vendor list and prompt user for selection
-        print("List of Vendors:")
-        print(Supplier.list_suppliers())
-        vendor_choice = int(input(">>> Enter number of vendor to purchase from: ")) - 1
+        while True:
+            print("List of Vendors:")
+            print(Supplier.list_suppliers())
+            try:
+                vendor_input = input(">>> Enter the number of the vendor to purchase from: ").strip()
+                if not vendor_input:  # Handle no input
+                    print("No input provided. Please enter a valid vendor number.")
+                    continue
+                vendor_choice = int(vendor_input) - 1  # Convert to zero-based index
 
-        # Get the vendor name based on user selection
-        vendors = list(Supplier.PRICES.keys())  # Get the list of vendor names
-        if 0 <= vendor_choice < len(vendors):
-            selected_vendor = vendors[vendor_choice]
-            # Call restock function with selected vendor and available cash
-            restock_result = hatchery.restock_resources(selected_vendor)
+                vendors = list(Supplier.PRICES.keys())  # Get the list of vendor names
+                if 0 <= vendor_choice < len(vendors):  # Validate vendor choice
+                    selected_vendor = vendors[vendor_choice]
 
-            # Handle restocking results
-            if "total_restock_cost" in restock_result:
-                print(
-                    f"Restocked successfully with {selected_vendor}. Remaining cash balance: {restock_result['available_cash']:.2f}")
-                # Debug: Restocking details
-                print(f"DEBUG: Total Restocking Costs: {restock_result['total_restock_cost']}")
-                print(f"DEBUG: Cash Balance after restocking: {restock_result['available_cash']}")
-                print("Updated stock levels:")
-                for resource, amount in restock_result["main_stock"].items():
-                    print(
-                        f"Warehouse Main: {resource.capitalize()}, {amount} (capacity={Warehouse.CAPACITIES[resource]['main']})")
-                for resource, amount in restock_result["aux_stock"].items():
-                    print(
-                        f"Warehouse Auxiliary: {resource.capitalize()}, {amount} (capacity={Warehouse.CAPACITIES[resource]['aux']})")
-            elif restock_result["status"] == "bankrupt":
-                print(
-                    f"Can't restock {restock_result['resource']}, insufficient funds. Need {restock_result['needed']:.2f} but only have {restock_result['available_cash']:.2f}")
-                print(f"Went bankrupt restocking warehouse {restock_result['warehouse']} in quarter {quarter}")
+                    # Call restock function with selected vendor and available cash
+                    restock_result = hatchery.restock_resources(selected_vendor)
 
-                # Display final state
-                print(f"\n=== FINAL STATE quarter {quarter + 1} ===")
-                print(f"\nHatchery Name: Eastaboga, Cash: {hatchery.cash_balance:.2f}")
-                print("Warehouse Main")
-                for resource, amount in hatchery.warehouse.main_stock.items():
-                    print(f"  {resource.capitalize()}, {amount} (capacity={Warehouse.CAPACITIES[resource]['main']})")
-                print("Warehouse Auxiliary")
-                for resource, amount in hatchery.warehouse.aux_stock.items():
-                    print(f"  {resource.capitalize()}, {amount} (capacity={Warehouse.CAPACITIES[resource]['aux']})")
-                print("Technicians")
-                for technician in hatchery.technicians:
-                    print(f"  Technician {technician.name}, weekly rate={Technician.WEEKLY_WAGE}")
+                    # Handle restocking results
+                    if "total_restock_cost" in restock_result:
+                        print(
+                            f"Restocked successfully with {selected_vendor}. Remaining cash balance: {restock_result['available_cash']:.2f}")
+                        # Debug: Restocking details
+                        print(f"DEBUG: Total Restocking Costs: {restock_result['total_restock_cost']}")
+                        print(f"DEBUG: Cash Balance after restocking: {restock_result['available_cash']}")
+                        print("Updated stock levels:")
+                        for resource, amount in restock_result["main_stock"].items():
+                            print(
+                                f"Warehouse Main: {resource.capitalize()}, {amount} (capacity={Warehouse.CAPACITIES[resource]['main']})")
+                        for resource, amount in restock_result["aux_stock"].items():
+                            print(
+                                f"Warehouse Auxiliary: {resource.capitalize()}, {amount} (capacity={Warehouse.CAPACITIES[resource]['aux']})")
+                    elif restock_result["status"] == "bankrupt":
+                        print(
+                            f"Can't restock {restock_result['resource']}, insufficient funds. Need {restock_result['needed']:.2f} but only have {restock_result['available_cash']:.2f}")
+                        print(f"Went bankrupt restocking warehouse {restock_result['warehouse']} in quarter {quarter}")
 
-
-                # Exit the simulation loop
-                break
-        else:
-            print("Invalid vendor selection.")
+                        # Display final state
+                        print(f"\n=== FINAL STATE quarter {quarter + 1} ===")
+                        print(f"\nHatchery Name: Eastaboga, Cash: {hatchery.cash_balance:.2f}")
+                        print("Warehouse Main")
+                        for resource, amount in hatchery.warehouse.main_stock.items():
+                            print(
+                                f"  {resource.capitalize()}, {amount} (capacity={Warehouse.CAPACITIES[resource]['main']})")
+                        print("Warehouse Auxiliary")
+                        for resource, amount in hatchery.warehouse.aux_stock.items():
+                            print(
+                                f"  {resource.capitalize()}, {amount} (capacity={Warehouse.CAPACITIES[resource]['aux']})")
+                        print("Technicians")
+                        for technician in hatchery.technicians:
+                            print(f"  Technician {technician.name}, weekly rate={Technician.WEEKLY_WAGE}")
+                    break  # Exit loop after successful restocking or bankruptcy
+                else:
+                    print(f"Invalid choice. Please select a number between 1 and {len(vendors)}.")
+            except ValueError:
+                print("Invalid input. Please enter a valid vendor number.")
 
         # Debug: End of quarter cash balance
         print(f"DEBUG: End of Quarter {quarter} Cash Balance: {hatchery.cash_balance}")
