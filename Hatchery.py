@@ -93,28 +93,73 @@ class Hatchery:
         return removed_technicians
 
     def sell_fish(self, fish_type, requested_quantity):
+        """
+        Sell a specified quantity of a fish type, prioritizing specialized technicians.
+        :param fish_type: Type of fish to sell.
+        :param requested_quantity: Quantity of fish to sell.
+        :return: Result dictionary with sale status and details.
+        """
         demand_data = self.CUSTOMER_DEMAND.get(fish_type)
         if not demand_data:
             return {"status": "error", "message": f"{fish_type} is not available for sale."}
 
         demand = demand_data["demand"]
         price = demand_data["price"]
+
+        # Exit early if sell_quantity is 0 to skip this fish type without errors
+        if requested_quantity == 0:
+            print(f"DEBUG: Skipping sale of {fish_type} as requested quantity is 0.")
+            return {"status": "skipped", "fish_type": fish_type}
+
         sell_quantity = min(requested_quantity, demand)
 
-        # Calculate base maintenance time for the requested sale
+        # Calculate total maintenance time for the requested sale
         base_maintenance_time = Fish.calculate_total_maintenance_time(fish_type, sell_quantity)
+        print(f"DEBUG: Base maintenance time for {sell_quantity} of {fish_type}: {base_maintenance_time:.2f} weeks")
 
-        # Adjust maintenance time if a specialised technician exists
-        specialised_technician_exists = any(
-            technician.is_specialised_for(fish_type) for technician in self.technicians
-        )
-        if specialised_technician_exists:
-            adjusted_maintenance_time = base_maintenance_time * (2 / 3)
+        # Split technicians into specialized and regular groups
+        specialized_technicians = [
+            technician for technician in self.technicians if technician.is_specialised_for(fish_type)
+        ]
+        regular_technicians = [
+            technician for technician in self.technicians if not technician.is_specialised_for(fish_type)
+        ]
+
+        print(f"DEBUG: Specialized technicians for {fish_type}: {[tech.name for tech in specialized_technicians]}")
+        print(f"DEBUG: Regular technicians: {[tech.name for tech in regular_technicians]}")
+
+        # Calculate how much specialized labor can handle
+        specialized_labor_available = len(specialized_technicians) * Technician.LABOUR_PER_QUARTER
+        # Calculate the maximum quantity specialized labor can handle
+        equivalent_specialized_time = specialized_labor_available * (3 / 2)  # Convert specialized labor to equivalent time
+        max_specialized_quantity = equivalent_specialized_time / (base_maintenance_time / sell_quantity)
+
+        print(f"DEBUG: Specialized labor available: {specialized_labor_available:.2f} weeks")
+        print(f"DEBUG: Maximum quantity specialized labor can handle: {max_specialized_quantity:.2f} fish")
+
+        if max_specialized_quantity >= sell_quantity:
+            # Specialized technicians can handle the entire sale
+            actual_maintenance_time = base_maintenance_time * (2 / 3)
+            print(
+                f"DEBUG: Entire sale handled by specialized technicians. Maintenance time: {actual_maintenance_time:.2f} weeks")
         else:
-            adjusted_maintenance_time = base_maintenance_time
+            # Specialized technicians handle part of the sale
+            specialized_maintenance_time = max_specialized_quantity * (base_maintenance_time / sell_quantity) * (2 / 3)
+            remaining_quantity = sell_quantity - max_specialized_quantity
+            regular_maintenance_time = remaining_quantity * (base_maintenance_time / sell_quantity)
+            actual_maintenance_time = specialized_maintenance_time + regular_maintenance_time
+            print(
+                f"DEBUG: Specialized technicians handled {max_specialized_quantity:.2f} fish. Maintenance time: {specialized_maintenance_time:.2f} weeks")
+            print(
+                f"DEBUG: Regular technicians handled {remaining_quantity:.2f} fish. Maintenance time: {regular_maintenance_time:.2f} weeks")
+            print(f"DEBUG: Total maintenance time: {actual_maintenance_time:.2f} weeks")
 
-        # Check labor constraint using adjusted maintenance time
-        labor_issue = self.available_labor < adjusted_maintenance_time
+        # Check labor constraint
+        labor_issue = self.available_labor < actual_maintenance_time
+        print(f"DEBUG: Available labor: {self.available_labor:.2f} weeks")
+        if labor_issue:
+            print(
+                f"DEBUG: Insufficient labor. Required: {actual_maintenance_time:.2f} weeks, Available: {self.available_labor:.2f} weeks")
 
         # Resource check and deduction (unchanged logic)
         resource_needs = Fish.calculate_resource_needs(fish_type, sell_quantity)
@@ -127,18 +172,18 @@ class Hatchery:
                     "available": available_amount
                 }
 
-        # Determine return status based on labor and resources (unchanged logic)
+        # Determine return status based on labor and resources
         if labor_issue and insufficient_resources:
             return {
                 "status": "insufficient_labor_and_resources",
-                "required_labor": adjusted_maintenance_time,
+                "required_labor": actual_maintenance_time,
                 "available_labor": self.available_labor,
                 "resources": insufficient_resources
             }
         elif labor_issue:
             return {
                 "status": "insufficient_labor",
-                "required_labor": adjusted_maintenance_time,
+                "required_labor": actual_maintenance_time,
                 "available_labor": self.available_labor
             }
         elif insufficient_resources:
@@ -147,11 +192,10 @@ class Hatchery:
                 "resources": insufficient_resources
             }
 
-        # Deduct labor using adjusted maintenance time
-        self.available_labor -= adjusted_maintenance_time
+        # Deduct labor
+        self.available_labor -= actual_maintenance_time
         print(
-            f"Deducted {adjusted_maintenance_time:.2f} weeks of labor for {sell_quantity} of {fish_type}. Remaining labor: {self.available_labor:.2f}"
-        )
+            f"DEBUG: Deducted {actual_maintenance_time:.2f} weeks of labor. Remaining labor: {self.available_labor:.2f} weeks")
 
         # Deduct resources
         for resource, amount_needed in resource_needs.items():
@@ -160,6 +204,8 @@ class Hatchery:
         # Calculate revenue and update cash balance
         revenue = sell_quantity * price
         self.cash_balance += revenue
+        print(
+            f"DEBUG: Sold {sell_quantity} of {fish_type} for revenue: £{revenue}. Updated cash balance: £{self.cash_balance}")
 
         return {
             "status": "success",

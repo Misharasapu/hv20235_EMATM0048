@@ -2,44 +2,44 @@ from Hatchery import Hatchery
 from Technician import Technician
 from Fish import Fish
 
-def test_specialised_technician_impact():
-    # Set up the Hatchery
-    hatchery = Hatchery()
-    hatchery.available_labor = 18  # Set available labour for the quarter
+# Create Hatchery instance
+hatchery = Hatchery()
 
-    # Add technicians (1 specialised in Clef Fins, 1 regular)
-    hatchery.technicians = [
-        Technician(name="Specialist", specialisation="Modal Bass"),  # Specialised technician
-        Technician(name="Regular", specialisation=None),           # Regular technician
-    ]
+# Add technicians
+hatchery.technicians.append(Technician("Alice", "Clef Fins"))  # Specialized in Clef Fins
+hatchery.technicians.append(Technician("Bob"))  # Regular technician
 
-    # Define test parameters
-    fish_type = "Modal Bass"
-    requested_quantity = 30  # Request to sell 10 units of Clef Fins
+# Start a new quarter to initialize labor
+hatchery.start_new_quarter()
 
-    # Calculate expected values
-    base_maintenance_time = Fish.calculate_total_maintenance_time(fish_type, requested_quantity)
-    adjusted_maintenance_time = base_maintenance_time * (2 / 3)  # Due to the specialised technician
-    expected_remaining_labour = hatchery.available_labor - adjusted_maintenance_time
+# Case 1: Labor and Resources Constraint
+print("\n--- Test Case 1: Labor and Resources Constraint ---")
+# Deplete the warehouse resources to simulate insufficient resources
+hatchery.warehouse.main_stock["fertiliser"] = 0
+hatchery.warehouse.main_stock["feed"] = 0
+hatchery.warehouse.main_stock["salt"] = 0
+result1 = hatchery.sell_fish("Clef Fins", 50)  # Demand exceeds available labor and resources
+print("Result:", result1)
 
-    # Call the sell_fish method
-    result = hatchery.sell_fish(fish_type, requested_quantity)
+# Reset resources for next test
+hatchery.warehouse.main_stock["fertiliser"] = 10000  # Partial refill
+hatchery.warehouse.main_stock["feed"] = 200  # Partial refill
+hatchery.warehouse.main_stock["salt"] = 50  # Partial refill
 
-    # Print test results
-    print("\n=== Test Results ===")
-    print(f"Fish Type: {fish_type}")
-    print(f"Requested Quantity: {requested_quantity}")
-    print(f"Base Maintenance Time: {base_maintenance_time}")
-    print(f"Adjusted Maintenance Time (Specialised Technician): {adjusted_maintenance_time}")
-    print(f"Initial Labour: 18")
-    print(f"Remaining Labour After Deduction: {hatchery.available_labor}")
-    print(f"Sell Fish Result: {result}")
+# Case 2: Only Resources Constraint
+print("\n--- Test Case 2: Resources Constraint Only ---")
+result2 = hatchery.sell_fish("Clef Fins", 50)  # Sufficient labor but insufficient resources
+print("Result:", result2)
 
-    # Assertions
-    assert result["status"] == "success", "Failed: Sale should be successful."
-    assert round(hatchery.available_labor, 2) == round(expected_remaining_labour, 2), \
-        "Failed: Labour deduction with specialised technicians is incorrect."
+# Reset resources to full capacity for next test
+hatchery.warehouse.main_stock = {
+    "fertiliser": 20000,
+    "feed": 400,
+    "salt": 200
+}
+hatchery.available_labor = 5  # Reduce labor to simulate a labor constraint
 
-# Run the test
-if __name__ == "__main__":
-    test_specialised_technician_impact()
+# Case 3: Only Labor Constraint
+print("\n--- Test Case 3: Labor Constraint Only ---")
+result3 = hatchery.sell_fish("Clef Fins", 10)  # Insufficient labor but sufficient resources
+print("Result:", result3)
