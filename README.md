@@ -224,29 +224,6 @@ The following libraries are required:
    ```bash
    pip install -r "additional code\requirements.txt"
     ```
-## Repository Structure
-
-### Repository Structure
-
-The repository is organised into the following folders and files:
-
-- **notebook**: Contains the Jupyter Notebook used for the analysis.
-  - `task2_analysis.ipynb`: The main notebook detailing the entire analysis process, from crawling the dataset to generating insights.
-  
-- **data**: Contains all the datasets generated and used in the project.
-  - `AAPL_stock_data.csv`: Historical stock data for Apple.
-  - `AMZN_stock_data.csv`: Historical stock data for Amazon.
-  - `TSLA_stock_data.csv`: Historical stock data for Tesla.
-  - `BTC-USD_crypto_data.csv`: Historical cryptocurrency data for Bitcoin.
-  - `ETH-USD_crypto_data.csv`: Historical cryptocurrency data for Ethereum.
-  - `merged_stock_crypto_data_reduced.csv`: Merged dataset of all stocks and cryptocurrencies.
-  - `cleaned_grouped_data.csv`: Dataset cleaned and grouped for analysis.
-  - `final_cleaned_enriched_data.csv`: Fully enriched and processed dataset.
-  - `grouped_data.csv`: Aggregated data for stocks and cryptocurrencies.
-  - `reordered_cleaned_data.csv`: Intermediate dataset for exploratory analysis.
-
-- **additional code**: Contains helper scripts or configuration files.
-  - `requirements.txt`: File listing all Python libraries required for the project.
 
     
 ## Key Steps in the Project
@@ -287,9 +264,26 @@ The project is structured into the following five main steps, each addressing a 
 ## How to Run the Project
 
 ### Repository Structure
-- `task 2 - data analytics.ipynb`: Jupyter Notebook containing the complete analysis, from data extraction to conclusion.
-- `requirements.txt`: File listing the required Python libraries for the project.
-- `data`: Folder containing the cleaned and processed CSV files generated during the project.
+
+The repository is organised into the following folders and files:
+
+- **notebook**: Contains the Jupyter Notebook used for the analysis.
+  - `task2_analysis.ipynb`: The main notebook detailing the entire analysis process, from crawling the dataset to generating insights.
+  
+- **data**: Contains all the datasets generated and used in the project.
+  - `AAPL_stock_data.csv`: Historical stock data for Apple.
+  - `AMZN_stock_data.csv`: Historical stock data for Amazon.
+  - `TSLA_stock_data.csv`: Historical stock data for Tesla.
+  - `BTC-USD_crypto_data.csv`: Historical cryptocurrency data for Bitcoin.
+  - `ETH-USD_crypto_data.csv`: Historical cryptocurrency data for Ethereum.
+  - `merged_stock_crypto_data_reduced.csv`: Merged dataset of all stocks and cryptocurrencies.
+  - `cleaned_grouped_data.csv`: Dataset cleaned and grouped for analysis.
+  - `final_cleaned_enriched_data.csv`: Fully enriched and processed dataset.
+  - `grouped_data.csv`: Aggregated data for stocks and cryptocurrencies.
+  - `reordered_cleaned_data.csv`: Intermediate dataset for exploratory analysis.
+
+- **additional code**: Contains helper scripts or configuration files.
+  - `requirements.txt`: File listing all Python libraries required for the project.
 
 ### Running the Jupyter Notebook
 1. Open the Jupyter Notebook:
