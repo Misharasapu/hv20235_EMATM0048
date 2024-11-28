@@ -182,7 +182,7 @@ class Warehouse:
                     "status": "bankrupt",
                     "warehouse": "main",
                     "resource": resource,
-                    "needed": needed_amount,
+                    "needed": cost_main,
                     "available_cash": available_cash
                 }
 
@@ -198,7 +198,7 @@ class Warehouse:
                     "status": "bankrupt",
                     "warehouse": "auxiliary",
                     "resource": resource,
-                    "needed": needed_amount,
+                    "needed": cost_aux,
                     "available_cash": available_cash
                 }
 
