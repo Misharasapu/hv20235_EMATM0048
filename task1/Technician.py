@@ -35,8 +35,13 @@ class Technician:
             specialisation (str or None): Fish type the technician specialises in.
             quarterly_wage (int): Wage for the technician for an entire quarter (12 weeks).
         """
+        # Store the technician's name
         self.name = name
+
+        # Store the technician's specialisation, defaulting to None if not provided
         self.specialisation = specialisation  # A single fish type or None
+
+        # Calculate and store the total wage for the quarter (12 weeks)
         self.quarterly_wage = Technician.WEEKLY_WAGE * 12  # Total quarterly wage
 
     def get_wage(self):
@@ -46,6 +51,7 @@ class Technician:
         Returns:
             int: Quarterly wage of the technician.
         """
+        # Return the pre-calculated quarterly wage
         return self.quarterly_wage
 
     @classmethod
@@ -56,6 +62,7 @@ class Technician:
         Returns:
             int: Maximum number of technicians.
         """
+        # Return the class-level constant for maximum technicians
         return cls.MAX_TECHNICIANS
 
     @classmethod
@@ -66,6 +73,7 @@ class Technician:
         Returns:
             int: Total labour in weeks (9 weeks per technician per quarter).
         """
+        # Return the labour weeks per quarter per technician
         return cls.LABOUR_PER_QUARTER
 
     @classmethod
@@ -79,6 +87,7 @@ class Technician:
         Returns:
             int: Total labour in weeks for all technicians in the quarter.
         """
+        # Multiply the labour weeks per technician by the number of technicians
         return num_technicians * cls.get_quarterly_labour()
 
     @classmethod
@@ -92,6 +101,7 @@ class Technician:
         Returns:
             int: Total wages for all technicians in the list.
         """
+        # Use a generator to sum up the quarterly wages for all technicians in the list
         return sum(technician.get_wage() for technician in technicians)
 
     def is_specialised_for(self, fish_type):
@@ -104,6 +114,8 @@ class Technician:
         Returns:
             bool: True if the technician is specialised for the given fish type, False otherwise.
         """
+        # Compare the technician's specialisation with the provided fish type
+        # Return True if they match, otherwise False
         return self.specialisation == fish_type
 
     def __str__(self):
@@ -113,5 +125,8 @@ class Technician:
         Returns:
             str: A string containing the technician's name, weekly rate, and specialisation.
         """
+        # Use "None" as a default string if the specialisation is not set
         specialisation = self.specialisation or "None"
+
+        # Return a formatted string with the technician's details
         return f"Technician {self.name}, weekly rate={Technician.WEEKLY_WAGE}, specialisation={specialisation}"

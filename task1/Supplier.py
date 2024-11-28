@@ -16,17 +16,17 @@ class Supplier:
         PRICES (dict): Static dictionary containing prices for different supply types
         (fertiliser, feed, salt) offered by each supplier.
     """
-    # Static pricing information as class-level dictionary
+    # Static pricing information as a class-level dictionary
     PRICES = {
         "Slippery Lakes": {
-            "fertiliser": 0.0003,  # price per ml (converted from 0.30 per litre)
-            "feed": 0.1,  # price per kg
-            "salt": 0.05  # price per kg
+            "fertiliser": 0.0003,  # Price per ml (converted from 0.30 per litre)
+            "feed": 0.1,  # Price per kg
+            "salt": 0.05  # Price per kg
         },
         "Scaly Wholesaler": {
-            "fertiliser": 0.0002,  # price per ml (converted from 0.20 per litre)
-            "feed": 0.4,  # price per kg
-            "salt": 0.25  # price per kg
+            "fertiliser": 0.0002,  # Price per ml (converted from 0.20 per litre)
+            "feed": 0.4,  # Price per kg
+            "salt": 0.25  # Price per kg
         }
     }
 
@@ -43,7 +43,16 @@ class Supplier:
             float or None: Price per unit for the specified supply type from the supplier,
             or None if the supplier or supply type is not found.
         """
-        return cls.PRICES.get(supplier_name, {}).get(supply_type, None)
+        # Attempt to retrieve the supplier's details from the PRICES dictionary.
+        # If the supplier is not found, return an empty dictionary.
+        supplier_data = cls.PRICES.get(supplier_name, {})
+
+        # Attempt to retrieve the price for the given supply type from the supplier's data.
+        # If the supply type is not found, return None.
+        price = supplier_data.get(supply_type, None)
+
+        # Return the price (or None if either the supplier or supply type doesn't exist).
+        return price
 
     @classmethod
     def list_suppliers(cls):
@@ -53,13 +62,15 @@ class Supplier:
         Returns:
             str: A formatted string listing suppliers by index.
         """
-        # Initialize an empty list to store each supplier line
+        # Initialize an empty list to store each supplier entry as a formatted string.
         supplier_list = []
 
-        # Loop through PRICES dictionary using enumerate to get both index and supplier name
+        # Loop through the PRICES dictionary, enumerating supplier names with an index.
+        # The `start=1` ensures the indices start from 1 for user-friendly display.
         for index, supplier in enumerate(cls.PRICES.keys(), start=1):
-            # Format each supplier with its index
+            # Append the formatted supplier name and index to the list.
             supplier_list.append(f"{index}. {supplier}")
 
-        # Join all supplier lines with a newline character and return the result
+        # Join the list of supplier entries with newline characters to form a multi-line string.
+        # Return the final formatted string.
         return "\n".join(supplier_list)
