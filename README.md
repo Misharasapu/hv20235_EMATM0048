@@ -54,6 +54,11 @@
 ## Introduction
 This project is a two-part assessment combining software development and data analysis. The first part involves implementing a **Fish Hatchery Simulation** using Python, focusing on object-oriented programming (OOP). The second part involves comparing the performance of traditional stocks and cryptocurrencies using real-world datasets. The project demonstrates proficiency in Python programming, data extraction, cleaning, and exploratory data analysis.
 
+### GitHub Repository
+The full project repository is available here:  
+[GitHub Repository: hv20235_EMATM0048](https://github.com/Misharasapu/hv20235_EMATM0048.git)
+
+
 ### Task Summaries
 
 - **Task 1: Fish Hatchery Simulation**  
