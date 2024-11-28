@@ -145,7 +145,7 @@ Final Cash Balance: $9600.00
 
 
 
-# Task 2: Data Analysis Project – Comparing Stocks and Cryptocurrencies
+# Data Analysis Project – Comparing Stocks and Cryptocurrencies - Task 2
 
 ## Introduction
 This project investigates the performance, volatility, and trading activity of traditional stocks and cryptocurrencies. By leveraging historical data from **Yahoo Finance**, the project aims to provide insights into the key differences between these two asset classes.
