@@ -1,3 +1,68 @@
+# Fish Hatchery Simulation & Data Analysis Project
+
+## Author
+**Name**: Mishara Sapukotanage  
+**Course**: MSc in Data Science, University of Bristol  
+**Module**: Software Development: Programming and Algorithms (EMATM0048)  
+
+---
+## Table of Contents
+1. [Fish Hatchery Simulation - Task 1](#fish-hatchery-simulation---task-1)
+   - [Overview](#overview)
+   - [Key Features](#key-features)
+   - [How the Simulation Works](#how-the-simulation-works)
+   - [Running the Simulation](#running-the-simulation)
+     - [Prerequisites](#prerequisites)
+     - [Steps to Run](#steps-to-run)
+     - [Example Commands](#example-commands)
+     - [Example Console Output](#example-console-output)
+   - [Project Structure](#project-structure)
+   - [Example Simulation Flow](#example-simulation-flow)
+   - [Notes](#notes)
+   - [Additional Information](#additional-information)
+     - [Suppliers](#suppliers)
+     - [Resources](#resources)
+     - [Labour](#labour)
+2. [Data Analysis Project - Comparing Stocks and Cryptocurrencies - Task 2](#data-analysis-project---comparing-stocks-and-cryptocurrencies---task-2)
+   - [Introduction](#introduction)
+   - [Objectives](#objectives)
+   - [Scope](#scope)
+   - [Dataset Details](#dataset-details)
+     - [Data Sources](#data-sources)
+     - [Assets Included](#assets-included)
+     - [Dataset Structure](#dataset-structure)
+     - [Dataset Highlights](#dataset-highlights)
+   - [Prerequisites](#prerequisites-1)
+     - [Required Tools](#required-tools)
+     - [Python Libraries](#python-libraries)
+     - [Installation Instructions](#installation-instructions)
+   - [Key Steps in the Project](#key-steps-in-the-project)
+     - [1. Crawling Real-World Datasets](#1-crawling-real-world-datasets)
+     - [2. Data Preparation and Cleaning](#2-data-preparation-and-cleaning)
+     - [3. Exploratory Data Analysis](#3-exploratory-data-analysis)
+     - [4. Formulating and Answering Key Questions](#4-formulating-and-answering-key-questions)
+     - [5. Summary and Conclusion](#5-summary-and-conclusion)
+   - [How to Run the Project](#how-to-run-the-project)
+     - [Repository Structure](#repository-structure)
+     - [Running the Jupyter Notebook](#running-the-jupyter-notebook)
+   - [Project Results and Outputs](#project-results-and-outputs)
+   - [Limitations](#limitations)
+   - [Future Work](#future-work)
+
+
+---
+## Introduction
+This project is a two-part assessment combining software development and data analysis. The first part involves implementing a **Fish Hatchery Simulation** using Python, focusing on object-oriented programming (OOP). The second part involves comparing the performance of traditional stocks and cryptocurrencies using real-world datasets. The project demonstrates proficiency in Python programming, data extraction, cleaning, and exploratory data analysis.
+
+### Task Summaries
+
+- **Task 1: Fish Hatchery Simulation**  
+  A text-based simulation for managing the operations of a fish hatchery. Key aspects include technician management, resource handling, fish sales, and financial operations. This task demonstrates OOP principles and decision-making under constraints.
+
+- **Task 2: Data Analysis of Stocks and Cryptocurrencies**  
+  An exploratory data analysis project comparing traditional stocks (e.g., Apple, Tesla) with cryptocurrencies (e.g., Bitcoin, Ethereum). Key metrics like average returns, volatility, and trading activity are analysed to highlight differences between asset classes.
+
+---
 
 # Fish Hatchery Simulation - Task 1
 
