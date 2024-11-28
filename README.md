@@ -349,13 +349,7 @@ This project can be extended in the following ways:
    - Create interactive dashboards for real-time data exploration.
 
 
-## Acknowledgements
 
-The following tools and resources were instrumental in the development of this project:
-
-- **Yahoo Finance**: For providing the historical price data.
-- **Python Libraries**: pandas, numpy, matplotlib, seaborn, yfinance.
-- **Jupyter Notebook**: For creating a structured and interactive analysis.
 
 
 
